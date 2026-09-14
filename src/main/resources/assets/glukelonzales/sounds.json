@@ -5,5 +5,32 @@
 		"sounds": [
 			"glukelonzales:mariachi_music"
 		]
+	},
+
+	"taco_boss_mariachi": {
+		"subtitle": "subtitles.glukelonzales.taco_boss_mariachi",
+		"sounds": [
+			{ "name": "glukelonzales:taco_boss_mariachi", "stream": true }
+		]
+	},
+	"taco_boss_taunt_1": {
+		"subtitle": "subtitles.glukelonzales.taco_boss_taunt",
+		"sounds": [ "glukelonzales:taco_boss_taunt_1" ]
+	},
+	"taco_boss_taunt_2": {
+		"subtitle": "subtitles.glukelonzales.taco_boss_taunt",
+		"sounds": [ "glukelonzales:taco_boss_taunt_2" ]
+	},
+	"taco_boss_taunt_3": {
+		"subtitle": "subtitles.glukelonzales.taco_boss_taunt",
+		"sounds": [ "glukelonzales:taco_boss_taunt_3" ]
+	},
+	"taco_boss_taunt_4": {
+		"subtitle": "subtitles.glukelonzales.taco_boss_taunt",
+		"sounds": [ "glukelonzales:taco_boss_taunt_4" ]
+	},
+	"taco_boss_taunt_5": {
+		"subtitle": "subtitles.glukelonzales.taco_boss_taunt",
+		"sounds": [ "glukelonzales:taco_boss_taunt_5" ]
 	}
 }

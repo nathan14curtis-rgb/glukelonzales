@@ -4,8 +4,12 @@
 	"_comment_items": "item.glukelonzales.<item_id>",
 
 	"_comment_entities": "entity.glukelonzales.<entity_id>",
+	"entity.glukelonzales.taco_boss": "Taco Boss",
+	"entity.glukelonzales.taco_projectile": "Taco",
 
 	"_comment_effects": "effect.glukelonzales.<effect_id>",
 
-	"_comment_sounds": "subtitles.glukelonzales.<sound_id>"
+	"_comment_sounds": "subtitles.glukelonzales.<sound_id>",
+	"subtitles.glukelonzales.taco_boss_mariachi": "Mariachi music blares",
+	"subtitles.glukelonzales.taco_boss_taunt": "Taco Boss shouts"
 }
