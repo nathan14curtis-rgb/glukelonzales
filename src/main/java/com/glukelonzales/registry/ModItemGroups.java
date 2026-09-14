@@ -3,7 +3,6 @@ package com.glukelonzales.registry;
 import com.glukelonzales.Glukelonzales;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
@@ -15,9 +14,11 @@ public class ModItemGroups {
 			Glukelonzales.id("glukelonzales"),
 			ItemGroup.create(ItemGroup.Row.TOP, 7)
 					.displayName(Text.translatable("itemgroup.glukelonzales"))
-					.icon(() -> new ItemStack(Items.GOLDEN_APPLE))
+					.icon(() -> new ItemStack(ModItems.SOMBRERO))
 					.entries((displayContext, entries) -> {
-						// entries.add(ModItems.TACO);
+						entries.add(ModItems.SOMBRERO);
+						entries.add(ModItems.TACO);
+						entries.add(ModItems.MARIACHI_SPAWN_EGG);
 					})
 					.build());
 

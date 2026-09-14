@@ -1,10 +1,13 @@
 package com.glukelonzales.client;
 
 import com.glukelonzales.Glukelonzales;
+import com.glukelonzales.entity.client.MariachiModel;
+import com.glukelonzales.entity.client.MariachiRenderer;
 import com.glukelonzales.entity.custom.TacoBossEntity;
 import com.glukelonzales.registry.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
@@ -20,18 +23,18 @@ import java.util.Map;
  * Client-only entrypoint: entity renderers, model layers, particles, HUD.
  * Never referenced from common code — the server does not have these classes.
  *
- * NOTE on the renderers below: visuals were explicitly out of scope for the first pass, so both
- * are placeholders that exist only so the client doesn't crash when the boss/taco spawn — the
- * boss reuses the vanilla player model scaled up, the taco renders as a flying cooked beef. Swap
- * either out for real art whenever it's ready; none of the AI/damage/sound logic depends on them.
+ * NOTE on the renderers below: the Mariachi has a real model and skin. The taco boss is still a
+ * placeholder that exists only so the client doesn't crash when it spawns — it reuses the vanilla
+ * player model scaled up. Swap it out for real art whenever it's ready; none of the AI/damage/sound
+ * logic depends on it.
  */
 public class GlukelonzalesClient implements ClientModInitializer {
 	private static final Map<Integer, TacoBossMariachiSound> ACTIVE_MARIACHI = new HashMap<>();
 
 	@Override
 	public void onInitializeClient() {
-		// EntityModelLayerRegistry.registerModelLayer(MariachiModel.LAYER, MariachiModel::getTexturedModelData);
-		// EntityRendererRegistry.register(ModEntities.MARIACHI, MariachiRenderer::new);
+		EntityModelLayerRegistry.registerModelLayer(MariachiModel.LAYER, MariachiModel::getTexturedModelData);
+		EntityRendererRegistry.register(ModEntities.MARIACHI, MariachiRenderer::new);
 
 		EntityRendererRegistry.register(ModEntities.TACO_BOSS, context ->
 				new MobEntityRenderer<>(context, new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER), false), 1.6f) {

@@ -26,9 +26,9 @@ public class Glukelonzales implements ModInitializer {
 	public void onInitialize() {
 		ModSounds.register();
 		ModEffects.register();
+		ModEntities.register();
 		ModItems.register();
 		ModItemGroups.register();
-		ModEntities.register();
 
 		LOGGER.info("[{}] mariachi music starts playing", MOD_ID);
 	}

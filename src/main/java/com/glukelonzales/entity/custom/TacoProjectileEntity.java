@@ -1,6 +1,7 @@
 package com.glukelonzales.entity.custom;
 
 import com.glukelonzales.registry.ModEntities;
+import com.glukelonzales.registry.ModItems;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FlyingItemEntity;
@@ -8,17 +9,14 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.ThrownItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.world.World;
 
 /**
- * The boss's special ranged attack. Visuals are a stand-in (renders as a flying cooked beef via
- * {@link #getStack()} — swap that, and {@link #getItem()}, for a real taco item once one
- * exists), but the flight physics and damage are real: 4 damage on a direct hit, discards on
- * any impact.
+ * The boss's special ranged attack. Renders as a flying taco, and the flight physics and damage
+ * are real: 4 damage on a direct hit, discards on any impact.
  */
 public class TacoProjectileEntity extends ThrownItemEntity implements FlyingItemEntity {
     private static final float DAMAGE = 4.0F;
@@ -33,12 +31,12 @@ public class TacoProjectileEntity extends ThrownItemEntity implements FlyingItem
 
     @Override
     protected Item getItem() {
-        return Items.COOKED_BEEF;
+        return ModItems.TACO;
     }
 
     @Override
     public ItemStack getStack() {
-        return new ItemStack(Items.COOKED_BEEF);
+        return new ItemStack(ModItems.TACO);
     }
 
     @Override

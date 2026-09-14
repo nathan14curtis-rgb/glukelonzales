@@ -1,15 +1,23 @@
 {
 	"itemgroup.glukelonzales": "Glukelonzales",
 
+	"entity.glukelonzales.mariachi": "Mariachi",
+	"entity.glukelonzales.taco_boss": "Taco Boss",
+	"entity.glukelonzales.taco_projectile": "Flying Taco",
+
+	"item.glukelonzales.mariachi_spawn_egg": "Mariachi Spawn Egg",
+	"item.glukelonzales.sombrero": "Sombrero de Luke",
+	"item.glukelonzales.taco": "Taco",
+
+	"subtitles.glukelonzales.taco_boss_mariachi": "Mariachi music blares",
+	"subtitles.glukelonzales.taco_boss_taunt": "Taco Boss shouts",
+	"subtitles.glukelonzales.taco_throw": "Taco launched",
+
 	"_comment_items": "item.glukelonzales.<item_id>",
 
 	"_comment_entities": "entity.glukelonzales.<entity_id>",
-	"entity.glukelonzales.taco_boss": "Taco Boss",
-	"entity.glukelonzales.taco_projectile": "Taco",
 
 	"_comment_effects": "effect.glukelonzales.<effect_id>",
 
-	"_comment_sounds": "subtitles.glukelonzales.<sound_id>",
-	"subtitles.glukelonzales.taco_boss_mariachi": "Mariachi music blares",
-	"subtitles.glukelonzales.taco_boss_taunt": "Taco Boss shouts"
+	"_comment_sounds": "subtitles.glukelonzales.<sound_id>"
 }
