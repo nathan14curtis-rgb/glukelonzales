@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "glukelonzales",
+	"version": "${version}",
+	"name": "Glukelonzales",
+	"description": "Mariachi music. Taco power. New creatures, items, sounds and effects.",
+	"authors": [],
+	"contact": {
+		"repo": "https://github.com/nathan14curtis-rgb/glukelonzales"
+	},
+	"license": "MIT",
+	"icon": "assets/glukelonzales/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.glukelonzales.Glukelonzales"
+		],
+		"client": [
+			"com.glukelonzales.client.GlukelonzalesClient"
+		]
+	},
+	"mixins": [
+		"glukelonzales.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.5",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
