@@ -14,8 +14,10 @@ public class ModItemGroups {
 			Glukelonzales.id("glukelonzales"),
 			ItemGroup.create(ItemGroup.Row.TOP, 7)
 					.displayName(Text.translatable("itemgroup.glukelonzales"))
-					.icon(() -> new ItemStack(ModItems.MARIACHI_SPAWN_EGG))
+					.icon(() -> new ItemStack(ModItems.SOMBRERO))
 					.entries((displayContext, entries) -> {
+						entries.add(ModItems.SOMBRERO);
+						entries.add(ModItems.TACO);
 						entries.add(ModItems.MARIACHI_SPAWN_EGG);
 					})
 					.build());

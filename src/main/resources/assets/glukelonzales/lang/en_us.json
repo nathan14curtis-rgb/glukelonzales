@@ -2,8 +2,13 @@
 	"itemgroup.glukelonzales": "Glukelonzales",
 
 	"entity.glukelonzales.mariachi": "Mariachi",
+	"entity.glukelonzales.taco_projectile": "Flying Taco",
 
 	"item.glukelonzales.mariachi_spawn_egg": "Mariachi Spawn Egg",
+	"item.glukelonzales.sombrero": "Sombrero de Luke",
+	"item.glukelonzales.taco": "Taco",
+
+	"subtitles.glukelonzales.taco_throw": "Taco launched",
 
 	"_comment_items": "item.glukelonzales.<item_id>",
 

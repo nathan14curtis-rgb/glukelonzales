@@ -8,6 +8,10 @@ import net.minecraft.registry.Registry;
 
 /** All items added by the mod. Add new entries here, then a model + texture + lang key. */
 public class ModItems {
+	public static final Item SOMBRERO = register("sombrero", new Item(new Item.Settings().maxCount(1)));
+
+	public static final Item TACO = register("taco", new Item(new Item.Settings()));
+
 	/** Spawn egg colours are taken from the skin: black charro suit, marigold trim. */
 	public static final Item MARIACHI_SPAWN_EGG = register("mariachi_spawn_egg",
 			new SpawnEggItem(ModEntities.MARIACHI, 0x2B2B2B, 0xE8A13A, new Item.Settings()));
