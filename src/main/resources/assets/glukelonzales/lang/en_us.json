@@ -1,6 +1,10 @@
 {
 	"itemgroup.glukelonzales": "Glukelonzales",
 
+	"entity.glukelonzales.mariachi": "Mariachi",
+
+	"item.glukelonzales.mariachi_spawn_egg": "Mariachi Spawn Egg",
+
 	"_comment_items": "item.glukelonzales.<item_id>",
 
 	"_comment_entities": "entity.glukelonzales.<entity_id>",

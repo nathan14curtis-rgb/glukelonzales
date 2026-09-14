@@ -13,8 +13,34 @@ A Minecraft mod adding new **creatures**, **items**, **sounds**, and **status ef
 | Java | 21 |
 | Mod ID | `glukelonzales` |
 
-> This repo currently contains the **scaffolding only** — every registry is wired up and empty,
-> ready for content to be dropped in.
+> Scaffolding plus the first creature. Items, sounds and effects registries are wired up
+> and still empty, ready for content to be dropped in.
+
+## Creatures
+
+### Mariachi
+
+Player-shaped, but **4 model pixels shorter in the leg** than Steve. Since 16 model pixels
+make one block, that is a quarter of a block off both the collision box and the eye height —
+width is untouched, because only the legs were shortened.
+
+| | Steve | Mariachi |
+|---|---|---|
+| Leg height (model px) | 12 | **8** |
+| Model height (model px) | 32 | **28** |
+| Hitbox width | 0.6 | 0.6 |
+| Hitbox height | 1.8 | **1.55** |
+| Eye height | 1.62 | **1.37** |
+
+Vanilla proportions run head `-8..0`, body `0..12`, legs `12..24` with the feet resting at
+y=24. Shortening the legs on their own would leave him floating, so head, body and arms are
+pushed down by the same 4 px and the feet stay planted.
+
+- Skin: `assets/glukelonzales/textures/entity/mariachi.png` — a standard 64x64 skin, with
+  the sombrero on the hat layer and the charro suit on the second (overlay) layer.
+- Model: `entity/client/MariachiModel.java` — all the sizing constants live here.
+- Hitbox: `registry/ModEntities.java` — `MARIACHI_WIDTH` / `MARIACHI_HEIGHT` / `MARIACHI_EYE_HEIGHT`.
+- Spawn egg: `mariachi_spawn_egg`, in the Glukelonzales creative tab.
 
 ## Building
 
@@ -38,8 +64,8 @@ src/main/java/com/glukelonzales/
 │   ├── ModEntities.java      Creature/entity types + attributes
 │   ├── ModSounds.java        SoundEvent registry
 │   └── ModEffects.java       Status effect registry
-├── entity/custom/            Mob classes (AI, attributes)  — MariachiEntity is the template
-├── entity/client/            Renderers + models (client only)
+├── entity/custom/            Mob classes (AI, attributes)  — MariachiEntity
+├── entity/client/            Renderers + models (client only) — MariachiModel, MariachiRenderer
 ├── item/custom/              Items with behaviour
 ├── effect/custom/            Status effect classes — TacoPowerEffect is the template
 ├── client/GlukelonzalesClient.java   Client entrypoint — renderers, model layers
