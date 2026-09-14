@@ -1,0 +1,11 @@
+{
+	"itemgroup.glukelonzales": "Glukelonzales",
+
+	"_comment_items": "item.glukelonzales.<item_id>",
+
+	"_comment_entities": "entity.glukelonzales.<entity_id>",
+
+	"_comment_effects": "effect.glukelonzales.<effect_id>",
+
+	"_comment_sounds": "subtitles.glukelonzales.<sound_id>"
+}
