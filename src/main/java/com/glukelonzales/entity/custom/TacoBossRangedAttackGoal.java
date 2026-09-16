@@ -14,7 +14,7 @@ import java.util.EnumSet;
  * boss keeps throwing tacos even mid-beatdown.
  */
 public class TacoBossRangedAttackGoal extends Goal {
-    private static final int COOLDOWN_TICKS = 70;
+    private static final int COOLDOWN_TICKS = 10; // ~7x the original 70-tick cooldown
     private static final double MIN_RANGE = 4.0D;
     private static final double MAX_RANGE = 40.0D;
 

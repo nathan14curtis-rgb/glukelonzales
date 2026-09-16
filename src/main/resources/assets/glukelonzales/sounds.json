@@ -1,12 +1,4 @@
 {
-	"_comment": "Each key maps to .ogg files in assets/glukelonzales/sounds/. Example below.",
-	"_example_mariachi_music": {
-		"subtitle": "subtitles.glukelonzales.mariachi_music",
-		"sounds": [
-			"glukelonzales:mariachi_music"
-		]
-	},
-
 	"taco_boss_mariachi": {
 		"subtitle": "subtitles.glukelonzales.taco_boss_mariachi",
 		"sounds": [

@@ -19,6 +19,7 @@ public class ModItemGroups {
 						entries.add(ModItems.SOMBRERO);
 						entries.add(ModItems.TACO);
 						entries.add(ModItems.MARIACHI_SPAWN_EGG);
+						entries.add(ModItems.LUKES_SPECIAL_EGG);
 					})
 					.build());
 

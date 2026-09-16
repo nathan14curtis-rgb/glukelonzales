@@ -16,6 +16,11 @@ public class ModItems {
 	public static final Item MARIACHI_SPAWN_EGG = register("mariachi_spawn_egg",
 			new SpawnEggItem(ModEntities.MARIACHI, 0x2B2B2B, 0xE8A13A, new Item.Settings()));
 
+	/** Easter-egg palette (pastel pink/mint) rather than anything drawn from the boss itself —
+	 *  makes it easy to spot in the creative inventory/search. */
+	public static final Item LUKES_SPECIAL_EGG = register("lukes_special_egg",
+			new SpawnEggItem(ModEntities.TACO_BOSS, 0xF7C6D9, 0xB5E8D5, new Item.Settings()));
+
 	public static Item register(String name, Item item) {
 		return Registry.register(Registries.ITEM, Glukelonzales.id(name), item);
 	}

@@ -46,12 +46,15 @@ public class TacoBossEntity extends HostileEntity {
     private static final TrackedData<Integer> PHASE =
             DataTracker.registerData(TacoBossEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
-    /** Detection radius, in blocks, for the stare-tracking check while stalking. */
-    public static final double DETECTION_RANGE = 40.0D;
+    /** Follow-range attribute value — the boss always knows where the nearest player is
+     *  regardless of distance (see {@link TacoBossStalkGoal}/{@link TacoBossStareTrackerGoal},
+     *  which don't distance-gate their player lookups); this just keeps vanilla's attribute
+     *  sane for anything else that reads it. */
+    public static final double DETECTION_RANGE = 128.0D;
     /** Field-of-view half-angle, in degrees, a player must be looking within to count as "staring". */
     public static final double STARE_FOV_DEGREES = 25.0D;
-    /** Continuous stare ticks required to snap the boss into a charge (60 ticks = 3 seconds). */
-    public static final int STARE_TRIGGER_TICKS = 60;
+    /** Continuous stare ticks required to snap the boss into a charge (40 ticks = 2 seconds). */
+    public static final int STARE_TRIGGER_TICKS = 40;
     /** How close the boss needs to be before it switches from charging to attacking. */
     public static final double MELEE_REACH = 3.0D;
 

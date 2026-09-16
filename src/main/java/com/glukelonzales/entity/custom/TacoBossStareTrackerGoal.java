@@ -31,12 +31,13 @@ public class TacoBossStareTrackerGoal extends Goal {
 
     @Override
     public void tick() {
-        List<? extends PlayerEntity> nearby = boss.getWorld().getPlayers().stream()
+        // No distance cap here — the boss always knows where every player is; only the
+        // FOV/line-of-sight check in isStaringAt() below gates whether it's being watched.
+        List<? extends PlayerEntity> players = boss.getWorld().getPlayers().stream()
                 .filter(p -> p.isAlive() && !p.isSpectator())
-                .filter(p -> boss.squaredDistanceTo(p) <= TacoBossEntity.DETECTION_RANGE * TacoBossEntity.DETECTION_RANGE)
                 .toList();
 
-        for (PlayerEntity player : nearby) {
+        for (PlayerEntity player : players) {
             boolean staring = isStaringAt(player);
             int current = boss.getStareTicks().getOrDefault(player.getUuid(), 0);
             current = staring

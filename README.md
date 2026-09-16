@@ -46,9 +46,10 @@ pushed down by the same 4 px and the feet stay planted.
 
 | Item | Notes |
 |---|---|
-| `sombrero` — "Sombrero de Luke" | Stacks to 1. Wearing/rendering it on a head is not wired up yet; see `assets/glukelonzales/models/entity/README.md`. |
+| `sombrero` — "Sombrero de Luke" | Stacks to 1. Wearing/rendering it on a head is not wired up yet; see [`docs/sombrero-model.md`](docs/sombrero-model.md). |
 | `taco` | Plain item, not edible yet. Doubles as the Taco Boss's projectile texture. |
 | `mariachi_spawn_egg` | Spawns the Mariachi. |
+| `lukes_special_egg` | Spawns the Taco Boss. Pastel pink/mint "Easter egg" colors rather than anything drawn from the boss's own palette, so it's easy to pick out in the creative inventory/search. |
 
 ## Building
 
@@ -115,9 +116,11 @@ register the `SoundEvent` in `ModSounds`, and add a `subtitles.glukelonzales.<id
 
 ## The Taco Boss
 
-A giant, fast, comedic-but-scary boss mob. No custom model/texture yet (it renders as an
-oversized placeholder — see the note in `GlukelonzalesClient`) — this pass is entirely about
-behavior. Summon it for testing with:
+A giant, fast, comedic-but-scary boss mob — a giant version of the Mariachi (same skin,
+`textures/entity/taco_boss.png`, currently a copy of `mariachi.png`; give it its own look
+whenever there's dedicated art, the renderer's texture lookup doesn't care which). Get one with
+`lukes_special_egg` (search "Luke's Special Egg" in the creative inventory, right-click the
+ground to spawn), or summon it directly for testing:
 
 ```
 /summon glukelonzales:taco_boss ~ ~ ~
@@ -125,10 +128,11 @@ behavior. Summon it for testing with:
 
 **Behavior** (`entity/custom/TacoBossEntity.java` and its `TacoBoss*Goal` classes):
 
-1. **Stalking** — lurks 9-18 blocks from the nearest player, doesn't attack. Every nearby
-   player's gaze is tracked (`TacoBossStareTrackerGoal`): looking at the boss (within a ~25°
-   cone, with line of sight) for **3 continuous seconds** snaps it into Chasing, targeting that
-   player. Looking away decays the timer gradually rather than resetting it.
+1. **Stalking** — always knows where the nearest player is (no distance cap) and holds a tight
+   18-22 block standoff, staring them down. Every player's gaze is tracked
+   (`TacoBossStareTrackerGoal`): looking at the boss (within a ~25° cone, with line of sight) for
+   **2 continuous seconds** snaps it into Chasing, targeting that player. Looking away decays the
+   timer gradually rather than resetting it.
 2. **Chasing** — sprints straight at its target at nearly double its stalking speed
    (`TacoBossChargeGoal`). A looping mariachi track starts, anchored to the boss's live position
    client-side (`TacoBossMariachiSound`) — Minecraft's normal distance falloff is what makes it
@@ -136,8 +140,8 @@ behavior. Summon it for testing with:
    Attacking.
 3. **Attacking** — rapid melee: half a heart (1 damage) roughly every 8 ticks, i.e. ~2.5
    hits/second (`TacoBossRapidMeleeGoal`). The mariachi track cuts out and a random taunt clip
-   plays every few seconds instead. Taco projectiles keep firing throughout Chasing/Attacking on
-   a ~3.5s cooldown (`TacoBossRangedAttackGoal` + `TacoProjectileEntity`, 4 damage on a direct
+   plays every few seconds instead. Taco projectiles keep firing throughout Chasing/Attacking
+   every 10 ticks (`TacoBossRangedAttackGoal` + `TacoProjectileEntity`, 4 damage on a direct
    hit).
 4. If the target dies, logs off, or gets more than 64 blocks away for 15+ seconds, the boss gives
    up and returns to Stalking (see `TacoBossEntity#tick()`).
@@ -169,6 +173,23 @@ just written by hand. A few API mismatches turned up along the way and are now f
 build, `Entity#damage` takes just `(DamageSource, float)` with no `ServerWorld` param, and the
 placeholder boss renderer needed an explicit `getTexture()` override. None of that touched the
 actual AI/behavior — it was all in the client-rendering and projectile plumbing.
+
+**Bugs found by actually running the client** — two real issues turned up in `run/logs/latest.log`
+after a `runClient` session, both now fixed:
+- `sounds.json` had a `"_comment"` entry with a plain string value at the top level. Every entry
+  in a Minecraft `sounds.json` must be a sound-definition object — a stray string value there
+  threw a `JsonSyntaxException` that invalidated the *entire file*, silently dropping every
+  custom sound (including the taco boss's) even though they were correctly registered on the
+  Java side. Removed it.
+- Two `README.md` files under `assets/glukelonzales/` (in `sounds/` and `models/entity/`) were
+  being picked up by the resource-pack scanner and logged as `Invalid path in mod resource-pack`
+  warnings (harmless — it just ignores them — but noisy). Moved the useful one to
+  [`docs/sombrero-model.md`](docs/sombrero-model.md); anything under `assets/` should be an
+  actual resource, not documentation.
+
+Everything else in the log (`No data fixer registered for <entity>`, `Missing sound for event`
+for the not-yet-supplied audio files, a `Sampler2` shader warning, missing vanilla goat-horn
+sounds) is normal dev-environment noise, not a bug.
 
 ## License
 
