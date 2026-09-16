@@ -36,9 +36,10 @@ import java.util.UUID;
  *       a looping mariachi track follows it client-side and swells as it closes in (vanilla's
  *       normal distance attenuation does that automatically). Once within melee reach it
  *       flips to ATTACKING.</li>
- *   <li>{@code ATTACKING} - rapid low-damage melee ({@link TacoBossRapidMeleeGoal}: half a
- *       heart, ~2-3 hits/sec), mariachi cuts out and random taunt clips play instead, and
- *       taco projectiles ({@link TacoBossRangedAttackGoal}) keep coming on a cooldown.</li>
+ *   <li>{@code ATTACKING} - taunt clips start playing over the chase music. The boss has no
+ *       melee attack at all — its only attack is {@link TacoBossRangedAttackGoal}'s tacos,
+ *       which fire whenever the target is more than 2 blocks away, twice as fast and exploding
+ *       twice as big once at or below half health.</li>
  * </ul>
  *
  * If the target is lost or gets far enough away for long enough, the boss gives up and
@@ -64,7 +65,7 @@ public class TacoBossEntity extends HostileEntity {
     public static final double MELEE_REACH = 3.0D;
 
     private static final double STALK_SPEED = 0.32D;
-    private static final double CHASE_SPEED = 0.58D;
+    private static final double CHASE_SPEED = 0.29D; // half of the original 0.58
     private static final double GIVE_UP_RANGE = 64.0D;
     private static final int GIVE_UP_TICKS = 300; // 15 seconds with no valid target/contact
     private static final double ATTACK_GIVE_UP_RANGE = 10.0D;
@@ -118,11 +119,10 @@ public class TacoBossEntity extends HostileEntity {
     @Override
     protected void initGoals() {
         this.goalSelector.add(0, new TacoBossStareTrackerGoal(this));
-        this.goalSelector.add(1, new TacoBossRapidMeleeGoal(this));
-        this.goalSelector.add(2, new TacoBossChargeGoal(this));
-        this.goalSelector.add(3, new TacoBossRangedAttackGoal(this));
-        this.goalSelector.add(4, new TacoBossStalkGoal(this));
-        this.goalSelector.add(5, new LookAroundGoal(this));
+        this.goalSelector.add(1, new TacoBossChargeGoal(this));
+        this.goalSelector.add(2, new TacoBossRangedAttackGoal(this));
+        this.goalSelector.add(3, new TacoBossStalkGoal(this));
+        this.goalSelector.add(4, new LookAroundGoal(this));
     }
 
     public Phase getPhase() {

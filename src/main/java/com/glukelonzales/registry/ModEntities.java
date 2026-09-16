@@ -19,14 +19,15 @@ import net.minecraft.registry.Registry;
  */
 public class ModEntities {
 	/**
-	 * Hitbox for the Mariachi. He is built on the vanilla player model but his legs are
-	 * 4 model pixels shorter (see MariachiModel), and 4 px is a quarter of a block, so his
-	 * collision box and eye height both sit 0.25 below a player's 1.8 / 1.62. Width is
-	 * unchanged — only the legs were shortened, not the body.
+	 * Hitbox for the Mariachi — standard vanilla player proportions. A shortened-leg variant
+	 * was tried (see git history / docs/sombrero-model.md era) but its UV sampling never lined
+	 * up right with the skin's feet, leaving them untextured; standard proportions render
+	 * correctly with the same skin and no special-cased model, at the cost of not being visibly
+	 * shorter than a player anymore.
 	 */
 	public static final float MARIACHI_WIDTH = 0.6f;
-	public static final float MARIACHI_HEIGHT = 1.55f;   // player 1.8 - 0.25
-	public static final float MARIACHI_EYE_HEIGHT = 1.37f; // player 1.62 - 0.25
+	public static final float MARIACHI_HEIGHT = 1.8f;
+	public static final float MARIACHI_EYE_HEIGHT = 1.62f;
 
 	public static final EntityType<MariachiEntity> MARIACHI = register("mariachi",
 			EntityType.Builder.create(MariachiEntity::new, SpawnGroup.CREATURE)

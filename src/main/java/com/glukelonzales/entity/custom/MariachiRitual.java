@@ -2,18 +2,19 @@ package com.glukelonzales.entity.custom;
 
 import com.glukelonzales.registry.ModEntities;
 import com.glukelonzales.registry.ModItems;
-import com.glukelonzales.registry.ModSounds;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.item.Item;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,6 +23,20 @@ import java.util.UUID;
  * each other, each holding a different instrument (vihuela, trumpet, violin — see {@link
  * MariachiEntity#interactMob}), and the ritual song starts. Once it's played all the way
  * through, the boss spawns roughly 50 blocks from whichever player is closest to the group.
+ *
+ * <p>The cluster check only matters for *triggering* the ritual — once it's started, mariachis
+ * wandering apart (normal AnimalEntity AI over a 2.5-minute song) don't cancel it, only actually
+ * losing the required instrument or dying does. Earlier requiring them to stay clustered the
+ * whole time meant a ritual could silently fizzle from ordinary wandering, with the song still
+ * audibly finishing and no boss ever showing up.
+ *
+ * <p>The song itself plays from a single invisible, invulnerable marker armor stand (see {@link
+ * #isRitualMarker}) rather than a direct {@code world.playSound} broadcast — that was triggering
+ * multiple overlapping full-length plays whenever the ritual got re-detected (e.g. from the
+ * clustering jitter above), since there's no way to cancel an already-started broadcast. Tying
+ * it to one entity's lifetime guarantees exactly one playback per ritual, and gets normal
+ * distance-based attenuation for free since it's a positioned sound (see
+ * {@code GlukelonzalesClient#updateRitualSound}).
  *
  * <p>Keeps things simple by tracking at most one active ritual at a time — if you start a second
  * trio elsewhere while one's already playing, it won't be picked up until the first resolves.
@@ -33,16 +48,23 @@ public class MariachiRitual {
     private static final double SUMMON_DISTANCE = 50.0;
     private static final Set<Item> INSTRUMENTS = Set.of(ModItems.VIHUELA, ModItems.TRUMPET, ModItems.VIOLIN);
 
+    /** Distinguishes the sound-carrier armor stand from any the player might place themselves. */
+    private static final String MARKER_NAME = "glukelonzales_ritual_marker";
+
     private static Ritual active;
 
-    private record Ritual(Set<UUID> participants, double x, double y, double z, int elapsedTicks) {
+    private record Ritual(Map<UUID, Item> requiredInstruments, UUID markerId, int elapsedTicks) {
         Ritual tick() {
-            return new Ritual(participants, x, y, z, elapsedTicks + CHECK_INTERVAL_TICKS);
+            return new Ritual(requiredInstruments, markerId, elapsedTicks + CHECK_INTERVAL_TICKS);
         }
     }
 
     public static void register() {
         ServerTickEvents.END_WORLD_TICK.register(MariachiRitual::tick);
+    }
+
+    public static boolean isRitualMarker(ArmorStandEntity stand) {
+        return stand.hasCustomName() && MARKER_NAME.equals(stand.getCustomName().getString());
     }
 
     private static void tick(ServerWorld world) {
@@ -59,23 +81,29 @@ public class MariachiRitual {
     }
 
     private static void progressActive(ServerWorld world) {
-        List<MariachiEntity> trio = new ArrayList<>();
-        for (UUID id : active.participants()) {
-            if (world.getEntity(id) instanceof MariachiEntity mariachi && mariachi.isAlive()
-                    && INSTRUMENTS.contains(mariachi.getMainHandStack().getItem())) {
-                trio.add(mariachi);
+        for (var entry : active.requiredInstruments().entrySet()) {
+            if (!(world.getEntity(entry.getKey()) instanceof MariachiEntity mariachi) || !mariachi.isAlive()
+                    || !mariachi.getMainHandStack().isOf(entry.getValue())) {
+                cancelActive(world); // someone died or lost their instrument — ritual fizzles
+                return;
             }
-        }
-        if (trio.size() < 3 || !stillClustered(trio)) {
-            active = null; // someone wandered off, died, or dropped their instrument — ritual fizzles
-            return;
         }
 
         active = active.tick();
         if (active.elapsedTicks() >= SONG_DURATION_TICKS) {
-            summonBoss(world, active.x(), active.y(), active.z());
+            if (world.getEntity(active.markerId()) instanceof ArmorStandEntity marker) {
+                summonBoss(world, marker.getX(), marker.getY(), marker.getZ());
+                marker.discard();
+            }
             active = null;
         }
+    }
+
+    private static void cancelActive(ServerWorld world) {
+        if (world.getEntity(active.markerId()) instanceof ArmorStandEntity marker) {
+            marker.discard();
+        }
+        active = null;
     }
 
     private static void findAndStartRitual(ServerWorld world) {
@@ -110,31 +138,28 @@ public class MariachiRitual {
 
     private static void startRitual(ServerWorld world, List<MariachiEntity> cluster) {
         double x = 0, y = 0, z = 0;
-        Set<UUID> participants = new HashSet<>();
+        Map<UUID, Item> requiredInstruments = new HashMap<>();
         for (MariachiEntity mariachi : cluster) {
             x += mariachi.getX();
             y += mariachi.getY();
             z += mariachi.getZ();
-            participants.add(mariachi.getUuid());
+            requiredInstruments.put(mariachi.getUuid(), mariachi.getMainHandStack().getItem());
         }
         int count = cluster.size();
         x /= count;
         y /= count;
         z /= count;
 
-        active = new Ritual(participants, x, y, z, 0);
-        world.playSound(null, x, y, z, ModSounds.RITUAL_SONG, SoundCategory.RECORDS, 4.0F, 1.0F);
-    }
+        ArmorStandEntity marker = new ArmorStandEntity(world, x, y, z);
+        marker.setInvisible(true);
+        marker.setInvulnerable(true);
+        marker.setNoGravity(true);
+        marker.setSilent(true);
+        marker.setCustomName(Text.literal(MARKER_NAME));
+        marker.setCustomNameVisible(false);
+        world.spawnEntity(marker);
 
-    private static boolean stillClustered(List<MariachiEntity> trio) {
-        for (MariachiEntity a : trio) {
-            for (MariachiEntity b : trio) {
-                if (a != b && a.squaredDistanceTo(b) > CLUSTER_RADIUS * CLUSTER_RADIUS) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        active = new Ritual(requiredInstruments, marker.getUuid(), 0);
     }
 
     private static boolean hasOneOfEach(List<MariachiEntity> cluster) {

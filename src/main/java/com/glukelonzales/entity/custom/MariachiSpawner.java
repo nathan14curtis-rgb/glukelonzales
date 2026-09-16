@@ -20,8 +20,8 @@ import java.util.List;
  * ones), per spec.
  */
 public class MariachiSpawner {
-    private static final int CHECK_INTERVAL_TICKS = 3;
-    private static final float SPAWN_CHANCE = 0.01F;
+    private static final int CHECK_INTERVAL_TICKS = 75;
+    private static final float SPAWN_CHANCE = 0.001F;
     private static final int MIN_RADIUS = 8;
     private static final int MAX_RADIUS = 24;
 

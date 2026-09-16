@@ -18,24 +18,27 @@ import net.minecraft.world.World;
  *
  * <p>Two modes: a plain one does {@link #damage} to whatever it directly hits, then discards —
  * used by the boss's ranged attack above half health (4 damage) and the sombrero's shoot ability
- * (10 damage, 5 hearts, before armor). An {@link #explosive} one instead detonates on ANY impact
- * (block or entity), like a small ghast fireball with fire disabled — used by the boss's ranged
- * attack once it's at or below half health.
+ * (10 damage, 5 hearts, before armor). An {@link #explosive} one instead detonates with power
+ * {@link #explosionPower} on ANY impact (block or entity), like a ghast fireball with fire
+ * disabled — used by the boss's ranged attack once it's at or below half health, at 2x the
+ * normal ghast-fireball power.
  */
 public class TacoProjectileEntity extends ThrownItemEntity {
     /** Default used only by the {@code (EntityType, World)} constructor, i.e. the client-side
      *  copy created from a spawn packet — the server-side instance that actually deals damage
      *  is always built through one of the constructors below with an explicit amount. */
     private static final float DEFAULT_DAMAGE = 4.0F;
-    private static final float EXPLOSION_POWER = 1.0F; // same as a ghast fireball
+    private static final float DEFAULT_EXPLOSION_POWER = 1.0F; // same as a ghast fireball
 
     private final float damage;
     private final boolean explosive;
+    private final float explosionPower;
 
     public TacoProjectileEntity(EntityType<? extends TacoProjectileEntity> entityType, World world) {
         super(entityType, world);
         this.damage = DEFAULT_DAMAGE;
         this.explosive = false;
+        this.explosionPower = DEFAULT_EXPLOSION_POWER;
     }
 
     public TacoProjectileEntity(World world, LivingEntity owner) {
@@ -43,13 +46,18 @@ public class TacoProjectileEntity extends ThrownItemEntity {
     }
 
     public TacoProjectileEntity(World world, LivingEntity owner, float damage) {
-        this(world, owner, damage, false);
+        this(world, owner, damage, false, DEFAULT_EXPLOSION_POWER);
     }
 
     public TacoProjectileEntity(World world, LivingEntity owner, float damage, boolean explosive) {
+        this(world, owner, damage, explosive, DEFAULT_EXPLOSION_POWER);
+    }
+
+    public TacoProjectileEntity(World world, LivingEntity owner, float damage, boolean explosive, float explosionPower) {
         super(ModEntities.TACO_PROJECTILE, owner, world);
         this.damage = damage;
         this.explosive = explosive;
+        this.explosionPower = explosionPower;
     }
 
     @Override
@@ -95,7 +103,7 @@ public class TacoProjectileEntity extends ThrownItemEntity {
 
     private void explode() {
         this.getWorld().createExplosion(this, this.getX(), this.getY(), this.getZ(),
-                EXPLOSION_POWER, false, World.ExplosionSourceType.MOB);
+                explosionPower, false, World.ExplosionSourceType.MOB);
         this.discard();
     }
 }

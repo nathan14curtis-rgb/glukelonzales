@@ -9,11 +9,12 @@ import net.minecraft.sound.SoundCategory;
 /**
  * "The Mexican Spirit" — granted by eating a taco. Heals 1 HP every {@link #TICKS_PER_HEAL}
  * ticks (half vanilla Regeneration's base 50-tick interval, i.e. twice the rate) for however
- * long the effect lasts (10 seconds when applied from the taco's FoodComponent). Also kicks off
- * the jingle for the effect's whole duration the moment it's applied.
+ * long the effect lasts (30 seconds when applied from the taco's FoodComponent, alongside
+ * Strength V). Also kicks off the jingle (9.7s) the moment it's applied.
  */
 public class MexicanSpiritEffect extends StatusEffect {
     private static final int TICKS_PER_HEAL = 25;
+    private static final float JINGLE_VOLUME = 0.5F; // halved per "turn all the songs down" request
 
     public MexicanSpiritEffect(StatusEffectCategory category, int color) {
         super(category, color);
@@ -35,6 +36,6 @@ public class MexicanSpiritEffect extends StatusEffect {
     @Override
     public void onApplied(LivingEntity entity, int amplifier) {
         entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(),
-                ModSounds.MEXICAN_SPIRIT_JINGLE, SoundCategory.PLAYERS, 1.0F, 1.0F);
+                ModSounds.MEXICAN_SPIRIT_JINGLE, SoundCategory.PLAYERS, JINGLE_VOLUME, 1.0F);
     }
 }

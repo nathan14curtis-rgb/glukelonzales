@@ -20,47 +20,38 @@ A Minecraft mod adding new **creatures**, **items**, **sounds**, and **status ef
 
 ### Mariachi
 
-Player-shaped, but **4 model pixels shorter in the leg** than Steve. Since 16 model pixels
-make one block, that is a quarter of a block off both the collision box and the eye height —
-width is untouched, because only the legs were shortened.
-
-| | Steve | Mariachi |
-|---|---|---|
-| Leg height (model px) | 12 | **8** |
-| Model height (model px) | 32 | **28** |
-| Hitbox width | 0.6 | 0.6 |
-| Hitbox height | 1.8 | **1.55** |
-| Eye height | 1.62 | **1.37** |
-
-Vanilla proportions run head `-8..0`, body `0..12`, legs `12..24` with the feet resting at
-y=24. Shortening the legs on their own would leave him floating, so head, body and arms are
-pushed down by the same 4 px and the feet stay planted.
+Player-shaped, standard vanilla proportions (0.6 wide, 1.8 tall, 1.62 eye height) — rendered
+with the stock `PlayerEntityModel`/`EntityModelLayers.PLAYER`, not a custom model.
 
 - Skin: `assets/glukelonzales/textures/entity/mariachi.png` — a standard 64x64 skin, with
   the sombrero on the hat layer and the charro suit on the second (overlay) layer.
-- Model: `entity/client/MariachiModel.java` — all the sizing constants live here.
+- Renderer: `entity/client/MariachiRenderer.java`.
 - Hitbox: `registry/ModEntities.java` — `MARIACHI_WIDTH` / `MARIACHI_HEIGHT` / `MARIACHI_EYE_HEIGHT`.
 - Spawn egg: `mariachi_spawn_egg`, in the Glukelonzales creative tab.
-- Natural spawning: every 3 ticks, each player standing in a desert-family biome (desert,
-  badlands, eroded/wooded badlands — the terracotta ones) gets a 1% roll to spawn one nearby
+- Natural spawning: every 75 ticks, each player standing in a desert-family biome (desert,
+  badlands, eroded/wooded badlands — the terracotta ones) gets a 0.1% roll to spawn one nearby
   (`entity/custom/MariachiSpawner.java`).
 - Give one a `vihuela`, `trumpet`, or `violin` (right-click while it's empty-handed) and it'll
   hold it — that's how the Taco Boss gets summoned, see below.
 
-**Bug fixed:** its feet weren't rendering (looked like it was walking on air). The shortened
-leg geometry cuts the *top* of the leg (near the hip) to keep the *bottom* (the feet) touching
-the ground, but the texture UV sampling was still reading from vanilla's un-shifted V-coordinate
-— so it sampled the top 8 rows of the texture's 12-row leg band (thigh) instead of the bottom 8
-(where feet/shoes are drawn), and the feet pixels were never read at all. Fixed by shifting the
-UV origin down by `LEG_SHORTENING` on all four leg/pants parts in `MariachiModel`. Same texture,
-same model — the Taco Boss (which reuses this model) is fixed by the same change.
+**Bug history: the feet.** An earlier pass gave the Mariachi (and the Taco Boss, which shares
+its skin) 4-model-pixel-shorter legs via a custom `MariachiModel`, matching a description of the
+skin's proportions. This repeatedly rendered with the feet missing/translucent — first suspected
+to be a UV-region mismatch and patched by shifting the sampled texture rows, which didn't fully
+fix it either. Rather than keep chasing the exact cause blind (no way to render/preview a model
+change without the reporter actually launching the game), both entities were switched to
+**standard, unmodified player proportions and the stock `PlayerEntityModel`** — the custom model
+class was deleted entirely. This guarantees correct rendering since it's vanilla's own
+well-tested model applied to a same-format 64x64 skin, at the cost of the Mariachi no longer
+being visibly shorter-legged than a player. The Taco Boss is still bigger overall, purely via
+its independent 2.1x render-time scale (see below), which was never related to the leg issue.
 
 ## Items
 
 | Item | Notes |
 |---|---|
 | `sombrero` — "Sombrero de Luke" | A real helmet: diamond-tier durability/protection/enchantability (`ArmorMaterials.DIAMOND`), 3D model ported from [`docs/sombrero-model.md`](docs/sombrero-model.md). Wear it and right-click with an empty main hand to fire a taco for 5 hearts of damage before armor. |
-| `taco` | Food: 4 hunger bars. Grants The Mexican Spirit (2x health regen) and Strength V, both for 30 seconds; an 8.7-second jingle plays on eating. |
+| `taco` | Food: 4 hunger bars. Grants The Mexican Spirit (2x health regen) and Strength V, both for 30 seconds; a 9.7-second jingle plays on eating. |
 | `vihuela` / `trumpet` / `violin` | The summoning-ritual instruments — see **The Summoning Ritual** below. Craftable (see `data/glukelonzales/recipe/`). |
 | `mariachi_spawn_egg` | Spawns the Mariachi. |
 | `lukes_special_egg` | Spawns the Taco Boss. Pastel pink/mint "Easter egg" colors rather than anything drawn from the boss's own palette, so it's easy to pick out in the creative inventory/search. |
@@ -98,7 +89,7 @@ src/main/java/com/glukelonzales/
 │   ├── ModSounds.java        SoundEvent registry
 │   └── ModEffects.java       Status effect registry
 ├── entity/custom/            Mob classes (AI, attributes)  — MariachiEntity
-├── entity/client/            Renderers + models (client only) — MariachiModel, MariachiRenderer
+├── entity/client/            Renderers + models (client only) — MariachiRenderer, SombreroModel
 ├── item/custom/              Items with behaviour
 ├── effect/custom/            Status effect classes — TacoPowerEffect is the template
 ├── client/GlukelonzalesClient.java   Client entrypoint — renderers, model layers
@@ -156,19 +147,19 @@ ground to spawn), or summon it directly for testing:
    (`TacoBossStareTrackerGoal`): looking at the boss (within a ~25° cone, with line of sight) for
    **2 continuous seconds** snaps it into Chasing, targeting that player. Looking away decays the
    timer gradually rather than resetting it.
-2. **Chasing** — sprints straight at its target at nearly double its stalking speed
-   (`TacoBossChargeGoal`). A looping chase track starts the moment it's engaged (Chasing or
-   Attacking — see below) and keeps playing across both, anchored to the boss's live position
+2. **Chasing** — sprints straight at its target (`TacoBossChargeGoal`; deliberately slower than
+   it first was — see Tuning knobs). A looping chase track starts the moment it's engaged
+   (Chasing or Attacking) and keeps playing across both, anchored to the boss's live position
    client-side (`TacoBossMariachiSound`) — Minecraft's normal distance falloff is what makes it
-   swell as the boss closes in, no extra volume code needed. Reaching melee range flips it to
-   Attacking.
-3. **Attacking** — rapid melee: half a heart (1 damage) roughly every 8 ticks, i.e. ~2.5
-   hits/second (`TacoBossRapidMeleeGoal`). A random taunt clip plays every few seconds on top of
-   the chase music. Taco projectiles keep firing throughout Chasing/Attacking every 10 ticks
-   (`TacoBossRangedAttackGoal` + `TacoProjectileEntity`) — above half health they just deal 4
-   direct damage; at or below half health they instead **explode on any impact** (ground or
-   player), a small ghast-fireball-style blast with fire disabled (`World.ExplosionSourceType.MOB`,
-   power 1.0, same as a ghast fireball).
+   swell as the boss closes in (and fade out as you run away), no extra volume code needed.
+   Reaching melee range flips it to Attacking.
+3. **Attacking** — the boss has **no melee attack at all** — its only attack is
+   `TacoBossRangedAttackGoal`'s tacos, which fire whenever the target is more than **2 blocks**
+   away (closer than that, it just stands there — there's nothing else for it to do). A random
+   taunt clip plays every few seconds on top of the chase music. Above half health, tacos deal 4
+   direct damage on a ~10-tick cooldown; at or below half health they fire **twice as often** (5
+   ticks) and **explode on any impact** (ground or player) at **twice the blast power** of a
+   normal ghast fireball, fire disabled (`World.ExplosionSourceType.MOB`).
 4. If the target dies, logs off, or gets more than 64 blocks away for 15+ seconds, the boss gives
    up and returns to Stalking (see `TacoBossEntity#tick()`), which also stops the music.
 
@@ -177,10 +168,18 @@ a red "Luke Gonzalez" boss bar at the top of the screen (`ServerBossBar`, same m
 Ender Dragon/Wither) that tracks its health from the moment a player is in render distance. Which
 chase track plays is driven by that same health, not by phase:
 
-- **Above half health** — `taco_boss_mariachi.ogg` (the "Normal" recording), full length, looping.
+- **Above half health** — `taco_boss_mariachi.ogg` (the "Normal" recording), full length, looping,
+  at 50% volume.
 - **At or below half health** — `taco_boss_mariachi_warning.ogg` (the "WARNING LOUD" recording,
-  trimmed to drop its first 3 seconds so the loop point is clean), looping, played back at 75%
-  volume (25% quieter than the normal track, per spec — the source recording itself runs hot).
+  trimmed to drop its first 3 seconds so the loop point is clean), looping, at 37.5% volume (still
+  25% quieter than the normal track's new baseline, per the original spec — the source recording
+  itself runs hot).
+
+(Both were halved again from their original volumes after a "the songs are too loud, and all of
+them need to fall off with distance" report — they were already positioned, distance-attenuated
+sounds the whole time, so the fix here is really just the volume cut; the perceived "doesn't get
+quieter" was almost certainly the ritual song's overlap bug below making everything sound
+constant and everywhere, not an actual attenuation bug.)
 
 If health crosses the halfway line mid-loop, `GlukelonzalesClient` stops the current track and
 starts the other one immediately rather than waiting for the loop to finish.
@@ -208,15 +207,29 @@ testing):
 2. Right-click one with a `vihuela`, one with a `trumpet`, and one with a `violin` (each needs
    an empty hand — see `MariachiEntity#interactMob`).
 3. The moment all three instruments are present in one cluster, the ritual song
-   (`ritual_song.ogg`) starts playing and a timer begins (`MariachiRitual`, checked once a
-   second). If any of the three wander apart, die, or lose their instrument before the song
-   finishes, the ritual just quietly fizzles — no partial-progress penalty, you can immediately
-   try again.
+   (`ritual_song.ogg`) starts playing once, and a timer begins (`MariachiRitual`, checked once a
+   second). The 8-block clustering only matters for this initial trigger — once the ritual has
+   started, the three don't need to stay near each other for the full ~2.5 minutes, only stay
+   alive and keep holding their instrument. (An earlier version required continuous clustering
+   the whole time, which — combined with ordinary wander AI over such a long duration — meant the
+   ritual could silently cancel from normal drifting apart, with the song still audibly finishing
+   and no boss ever showing up. That's the "boss didn't spawn" bug; fixed by only checking the
+   instruments now.)
 4. Once the full song has played through, the boss spawns ~50 blocks from whichever player is
    closest to the ritual, standing on the surface (a heightmap lookup with a few retries for
    clear headroom, so it doesn't spawn stuck in terrain or fall from the sky). From there its
    normal Stalking behavior takes over — it already always knows the nearest player and holds
    an 18-22 block standoff, so it closes the gap and starts stalking on its own.
+
+**Bug fixed: the song played 2-3 times at once, staggered.** It was triggered with a direct
+`world.playSound` broadcast every time the ritual (re-)detected a valid trio, and — since a
+`world.playSound` call can't be cancelled once sent — any spurious re-detection (e.g. the
+clustering jitter above, before that was fixed) started a brand new, independent, ~2.5-minute
+playback on top of whatever was already playing. Fixed by tying the song to a single invisible,
+invulnerable marker entity (a silent `ArmorStandEntity`) spawned exactly once per ritual: the
+client plays a one-shot, non-looping, distance-attenuated sound anchored to that one entity
+(`GlukelonzalesClient#updateRitualSound`) instead of a raw broadcast, so no matter how the
+server-side bookkeeping gets re-evaluated, the audible song can only ever be playing once.
 
 **Recipes** (`data/glukelonzales/recipe/`) — shapes chosen to loosely mirror each instrument
 where a 3x3 grid allows it:
@@ -268,6 +281,12 @@ after a `runClient` session, both now fixed:
 Everything else in the log (`No data fixer registered for <entity>`, `Missing sound for event`
 for the not-yet-supplied audio files, a `Sampler2` shader warning, missing vanilla goat-horn
 sounds) is normal dev-environment noise, not a bug.
+
+A later ~22-minute play session's log (spanning the sombrero, ritual, and boss fights) came back
+clean too — no exceptions, just one `Can't keep up! ... 60 ticks behind` spike early on (a single
+lag hiccup, not repeated; most likely a window focus loss or big chunk load rather than anything
+in this mod, since nothing in the following ~20 minutes of active combat/ritual logic repeated
+it).
 
 ## License
 
