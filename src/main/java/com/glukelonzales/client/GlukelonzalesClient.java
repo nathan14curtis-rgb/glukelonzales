@@ -15,6 +15,7 @@ import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +39,13 @@ public class GlukelonzalesClient implements ClientModInitializer {
 
 		EntityRendererRegistry.register(ModEntities.TACO_BOSS, context ->
 				new MobEntityRenderer<>(context, new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER), false), 1.6f) {
+					@Override
+					public Identifier getTexture(TacoBossEntity entity) {
+						// Placeholder: no real skin yet, so this resolves to Minecraft's
+						// missing-texture checkerboard. Swap in a real texture identifier here.
+						return Identifier.of("glukelonzales", "textures/entity/taco_boss.png");
+					}
+
 					@Override
 					protected void scale(TacoBossEntity entity, MatrixStack matrices, float amount) {
 						float scale = 2.1f;

@@ -2,6 +2,7 @@ package com.glukelonzales.entity.custom;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 
@@ -60,7 +61,7 @@ public class TacoBossRangedAttackGoal extends Goal {
         double dz = target.getZ() - taco.getZ();
         taco.setVelocity(dx, dy + Math.sqrt(dx * dx + dz * dz) * 0.1, dz, 1.6F, 2.0F);
 
-        boss.getWorld().spawnEntity(taco);
+        ((ServerWorld) boss.getWorld()).spawnEntity(taco);
         boss.getWorld().playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                 SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.HOSTILE, 1.0F, 0.7F);
     }

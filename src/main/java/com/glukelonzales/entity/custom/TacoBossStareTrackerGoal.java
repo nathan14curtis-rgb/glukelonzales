@@ -31,7 +31,7 @@ public class TacoBossStareTrackerGoal extends Goal {
 
     @Override
     public void tick() {
-        List<PlayerEntity> nearby = boss.getWorld().getPlayers().stream()
+        List<? extends PlayerEntity> nearby = boss.getWorld().getPlayers().stream()
                 .filter(p -> p.isAlive() && !p.isSpectator())
                 .filter(p -> boss.squaredDistanceTo(p) <= TacoBossEntity.DETECTION_RANGE * TacoBossEntity.DETECTION_RANGE)
                 .toList();

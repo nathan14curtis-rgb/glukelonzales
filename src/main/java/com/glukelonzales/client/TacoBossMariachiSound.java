@@ -28,7 +28,7 @@ public class TacoBossMariachiSound extends MovingSoundInstance {
     @Override
     public void tick() {
         if (!boss.isAlive() || boss.isRemoved() || boss.getPhase() != TacoBossEntity.Phase.CHASING) {
-            this.done = true;
+            this.setDone();
             return;
         }
         this.x = boss.getX();

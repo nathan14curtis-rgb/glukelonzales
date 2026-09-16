@@ -4,21 +4,20 @@ import com.glukelonzales.registry.ModEntities;
 import com.glukelonzales.registry.ModItems;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.FlyingItemEntity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.ThrownItemEntity;
+import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.world.World;
 
 /**
- * The boss's special ranged attack. Renders as a flying taco, and the flight physics and damage
- * are real: 4 damage on a direct hit, discards on any impact.
+ * The boss's special ranged attack. Renders as a flying taco (via {@link #getDefaultItem()} —
+ * {@code ThrownItemEntity} already implements the client rendering interface and derives the
+ * flying icon from this, same as vanilla's snowball/egg), and the flight physics and damage are
+ * real: 4 damage on a direct hit, discards on any impact.
  */
-public class TacoProjectileEntity extends ThrownItemEntity implements FlyingItemEntity {
+public class TacoProjectileEntity extends ThrownItemEntity {
     private static final float DAMAGE = 4.0F;
 
     public TacoProjectileEntity(EntityType<? extends TacoProjectileEntity> entityType, World world) {
@@ -30,13 +29,8 @@ public class TacoProjectileEntity extends ThrownItemEntity implements FlyingItem
     }
 
     @Override
-    protected Item getItem() {
+    protected Item getDefaultItem() {
         return ModItems.TACO;
-    }
-
-    @Override
-    public ItemStack getStack() {
-        return new ItemStack(ModItems.TACO);
     }
 
     @Override
@@ -53,7 +47,7 @@ public class TacoProjectileEntity extends ThrownItemEntity implements FlyingItem
         var source = owner instanceof LivingEntity livingOwner
                 ? this.getWorld().getDamageSources().mobProjectile(this, livingOwner)
                 : this.getWorld().getDamageSources().generic();
-        target.damage((ServerWorld) this.getWorld(), source, DAMAGE);
+        target.damage(source, DAMAGE);
         this.discard();
     }
 

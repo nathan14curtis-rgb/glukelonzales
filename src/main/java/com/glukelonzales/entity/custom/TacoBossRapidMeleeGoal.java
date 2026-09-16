@@ -2,7 +2,6 @@ package com.glukelonzales.entity.custom;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
 
 import java.util.EnumSet;
@@ -57,7 +56,7 @@ public class TacoBossRapidMeleeGoal extends Goal {
         if (--attackCooldown <= 0) {
             attackCooldown = ATTACK_INTERVAL_TICKS;
             boss.swingHand(Hand.MAIN_HAND);
-            target.damage((ServerWorld) boss.getWorld(), boss.getWorld().getDamageSources().mobAttack(boss), DAMAGE_PER_HIT);
+            target.damage(boss.getWorld().getDamageSources().mobAttack(boss), DAMAGE_PER_HIT);
         }
     }
 }

@@ -53,11 +53,12 @@ pushed down by the same 4 px and the feet stay planted.
 ## Building
 
 ```bash
-gradle wrapper          # first time only, generates ./gradlew
 ./gradlew build         # jar lands in build/libs/
 ./gradlew runClient     # launch a dev client
 ./gradlew runServer     # launch a dev server
 ```
+
+(The wrapper — `gradlew` / `gradlew.bat` / `gradle/wrapper/gradle-wrapper.jar` — is committed, so no separate `gradle wrapper` bootstrap step is needed; just make sure you have JDK 21.)
 
 ## Project layout
 
@@ -161,13 +162,13 @@ instead of hardcoded.
 for 1.21.1, drop the jar in `mods/`, or bundle it into a modpack (CurseForge/Modrinth/Prism all
 support installing a jar this way, or you can publish it there directly).
 
-**A note on confidence** — this was written against Fabric Loader 0.16.5 / Yarn 1.21.1+build.3
-(from `gradle.properties`) without being compiled in the environment that wrote it (no working
-Gradle/JDK 21 available there). The AI/damage/movement logic uses long-stable APIs I'm confident
-in. If the build fails, the most likely spots to double-check first are the client-rendering
-placeholders in `GlukelonzalesClient` (`MobEntityRenderer`/`PlayerEntityModel` constructor args,
-the `scale()` override) and `FlyingItemEntityRenderer` for the projectile — none of that affects
-the actual boss behavior, so a rendering tweak there won't touch the logic described above.
+**Build status** — `./gradlew build` passes clean (compiles and jars) against the exact Fabric
+Loader 0.16.5 / Yarn 1.21.1+build.3 versions pinned in `gradle.properties` — actually run, not
+just written by hand. A few API mismatches turned up along the way and are now fixed:
+`ThrownItemEntity` lives under `entity.projectile.thrown` (not `entity.projectile`) in this Yarn
+build, `Entity#damage` takes just `(DamageSource, float)` with no `ServerWorld` param, and the
+placeholder boss renderer needed an explicit `getTexture()` override. None of that touched the
+actual AI/behavior — it was all in the client-rendering and projectile plumbing.
 
 ## License
 
