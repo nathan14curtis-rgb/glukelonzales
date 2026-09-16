@@ -22,8 +22,10 @@ import net.minecraft.client.util.math.MatrixStack;
  * bone's pivot height). Minecraft's Java {@link ModelPart} cuboids are y-down and relative to
  * their own pivot (which we place at the head's pivot via {@link #getRoot()} +
  * {@link ModelPart#copyTransform}, see {@code SombreroArmorRenderer}), so each cube's Java-space
- * origin is {@code -(bedrockY + bedrockHeight - 24)}. Every cube in the source doc is centered on
- * x=0 and z=0, so there's no left/right or front/back ambiguity to get wrong in that conversion.
+ * origin is {@code -(bedrockY + bedrockHeight - 24)}, then shifted up a bit further by
+ * {@link #LIFT} so it doesn't fully swallow the head. Every cube in the source doc is centered
+ * on x=0 and z=0, so there's no left/right or front/back ambiguity to get wrong in that
+ * conversion.
  */
 public class SombreroModel extends Model {
     public static final EntityModelLayer LAYER = new EntityModelLayer(Glukelonzales.id("sombrero"), "main");
@@ -35,21 +37,26 @@ public class SombreroModel extends Model {
         this.hat = root.getChild("hat");
     }
 
+    /** Nudges the whole hat up (more negative Y) off the doc's literal coordinates, so the
+     *  bottom of the head (chin/jaw) peeks out underneath instead of being fully covered.
+     *  Positive = higher; tune this one number if it needs to sit higher/lower. */
+    private static final float LIFT = 1.0f;
+
     public static TexturedModelData getTexturedModelData() {
         ModelData modelData = new ModelData();
         ModelPartData root = modelData.getRoot();
 
         root.addChild("hat", ModelPartBuilder.create()
                         // outer brim
-                        .uv(0, 0).cuboid(-16.0f, -1.5f, -16.0f, 32.0f, 1.0f, 32.0f, Dilation.NONE)
+                        .uv(0, 0).cuboid(-16.0f, -1.5f - LIFT, -16.0f, 32.0f, 1.0f, 32.0f, Dilation.NONE)
                         // inner brim
-                        .uv(0, 34).cuboid(-14.0f, -2.5f, -14.0f, 28.0f, 1.0f, 28.0f, Dilation.NONE)
+                        .uv(0, 34).cuboid(-14.0f, -2.5f - LIFT, -14.0f, 28.0f, 1.0f, 28.0f, Dilation.NONE)
                         // crown
-                        .uv(0, 64).cuboid(-5.0f, -10.5f, -5.0f, 10.0f, 9.0f, 10.0f, Dilation.NONE)
+                        .uv(0, 64).cuboid(-5.0f, -10.5f - LIFT, -5.0f, 10.0f, 9.0f, 10.0f, Dilation.NONE)
                         // hat band
-                        .uv(44, 64).cuboid(-6.0f, -4.0f, -6.0f, 12.0f, 2.0f, 12.0f, Dilation.NONE)
+                        .uv(44, 64).cuboid(-6.0f, -4.0f - LIFT, -6.0f, 12.0f, 2.0f, 12.0f, Dilation.NONE)
                         // crown cap
-                        .uv(44, 84).cuboid(-4.0f, -11.5f, -4.0f, 8.0f, 1.0f, 8.0f, Dilation.NONE),
+                        .uv(44, 84).cuboid(-4.0f, -11.5f - LIFT, -4.0f, 8.0f, 1.0f, 8.0f, Dilation.NONE),
                 ModelTransform.NONE);
 
         return TexturedModelData.of(modelData, 128, 128);
