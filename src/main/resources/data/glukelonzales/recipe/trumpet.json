@@ -1,0 +1,16 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"category": "misc",
+	"key": {
+		"G": { "item": "minecraft:gold_ingot" }
+	},
+	"pattern": [
+		"  G",
+		" G ",
+		"G  "
+	],
+	"result": {
+		"id": "glukelonzales:trumpet",
+		"count": 1
+	}
+}

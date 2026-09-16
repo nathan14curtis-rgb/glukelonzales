@@ -61,6 +61,7 @@ public class GlukelonzalesClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.TACO_PROJECTILE, FlyingItemEntityRenderer::new);
 
 		ClientTickEvents.END_CLIENT_TICK.register(GlukelonzalesClient::updateMariachiSounds);
+		SombreroClientHandler.register();
 
 		Glukelonzales.LOGGER.debug("Client init for {}", Glukelonzales.MOD_ID);
 	}

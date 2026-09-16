@@ -11,7 +11,9 @@ import java.util.EnumSet;
 /**
  * The special attack: lobs a {@link TacoProjectileEntity} at the target on a cooldown while
  * chasing or attacking (not while merely stalking). Runs alongside melee once in range, so the
- * boss keeps throwing tacos even mid-beatdown.
+ * boss keeps throwing tacos even mid-beatdown. Once at or below half health, the tacos switch to
+ * exploding on impact (ground or player) instead of just hitting for flat damage — a small
+ * ghast-fireball-style blast, no fire.
  */
 public class TacoBossRangedAttackGoal extends Goal {
     private static final int COOLDOWN_TICKS = 10; // ~7x the original 70-tick cooldown
@@ -63,7 +65,8 @@ public class TacoBossRangedAttackGoal extends Goal {
         double dirX = horizontalDist > 1.0E-4 ? towardX / horizontalDist : 1.0;
         double dirZ = horizontalDist > 1.0E-4 ? towardZ / horizontalDist : 0.0;
 
-        TacoProjectileEntity taco = new TacoProjectileEntity(boss.getWorld(), boss);
+        TacoProjectileEntity taco = new TacoProjectileEntity(
+                boss.getWorld(), boss, 4.0F, boss.isBelowHalfHealth());
         taco.setPosition(boss.getX() + dirX * clearance, boss.getEyeY() - 0.3, boss.getZ() + dirZ * clearance);
 
         double dx = target.getX() - taco.getX();

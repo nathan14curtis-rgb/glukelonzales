@@ -41,15 +41,38 @@ pushed down by the same 4 px and the feet stay planted.
 - Model: `entity/client/MariachiModel.java` — all the sizing constants live here.
 - Hitbox: `registry/ModEntities.java` — `MARIACHI_WIDTH` / `MARIACHI_HEIGHT` / `MARIACHI_EYE_HEIGHT`.
 - Spawn egg: `mariachi_spawn_egg`, in the Glukelonzales creative tab.
+- Natural spawning: every 3 ticks, each player standing in a desert-family biome (desert,
+  badlands, eroded/wooded badlands — the terracotta ones) gets a 1% roll to spawn one nearby
+  (`entity/custom/MariachiSpawner.java`).
+- Give one a `vihuela`, `trumpet`, or `violin` (right-click while it's empty-handed) and it'll
+  hold it — that's how the Taco Boss gets summoned, see below.
+
+**Bug fixed:** its feet weren't rendering (looked like it was walking on air). The shortened
+leg geometry cuts the *top* of the leg (near the hip) to keep the *bottom* (the feet) touching
+the ground, but the texture UV sampling was still reading from vanilla's un-shifted V-coordinate
+— so it sampled the top 8 rows of the texture's 12-row leg band (thigh) instead of the bottom 8
+(where feet/shoes are drawn), and the feet pixels were never read at all. Fixed by shifting the
+UV origin down by `LEG_SHORTENING` on all four leg/pants parts in `MariachiModel`. Same texture,
+same model — the Taco Boss (which reuses this model) is fixed by the same change.
 
 ## Items
 
 | Item | Notes |
 |---|---|
-| `sombrero` — "Sombrero de Luke" | Stacks to 1. Wearing/rendering it on a head is not wired up yet; see [`docs/sombrero-model.md`](docs/sombrero-model.md). |
-| `taco` | Plain item, not edible yet. Doubles as the Taco Boss's projectile texture. |
+| `sombrero` — "Sombrero de Luke" | A real helmet: diamond-tier durability/protection/enchantability (`ArmorMaterials.DIAMOND`), 3D model ported from [`docs/sombrero-model.md`](docs/sombrero-model.md). Wear it and right-click with an empty main hand to fire a taco for 5 hearts of damage before armor. |
+| `taco` | Food: 4 hunger bars. Grants The Mexican Spirit (2x health regen) and Strength V, both for 30 seconds; an 8.7-second jingle plays on eating. |
+| `vihuela` / `trumpet` / `violin` | The summoning-ritual instruments — see **The Summoning Ritual** below. Craftable (see `data/glukelonzales/recipe/`). |
 | `mariachi_spawn_egg` | Spawns the Mariachi. |
 | `lukes_special_egg` | Spawns the Taco Boss. Pastel pink/mint "Easter egg" colors rather than anything drawn from the boss's own palette, so it's easy to pick out in the creative inventory/search. |
+
+**Bug fixed: the sombrero's shoot ability didn't fire.** It was hooked to Fabric's
+`UseItemCallback`, which relies on the vanilla client's own decision about whether an empty-hand,
+nothing-targeted right-click is even worth sending a packet for — that isn't guaranteed the way
+it is for a held item, and in practice it wasn't reliably reaching the server. Replaced with a
+direct approach: the client watches the vanilla "use item" key itself every tick
+(`SombreroClientHandler`) and, on a rising edge with an empty main hand and the sombrero worn,
+sends a small custom packet (`ShootTacoPayload`) straight to the server, which fires the taco
+unconditionally (`SombreroTacoAbility`). No dependency on what's being looked at.
 
 ## Building
 
@@ -142,7 +165,10 @@ ground to spawn), or summon it directly for testing:
 3. **Attacking** — rapid melee: half a heart (1 damage) roughly every 8 ticks, i.e. ~2.5
    hits/second (`TacoBossRapidMeleeGoal`). A random taunt clip plays every few seconds on top of
    the chase music. Taco projectiles keep firing throughout Chasing/Attacking every 10 ticks
-   (`TacoBossRangedAttackGoal` + `TacoProjectileEntity`, 4 damage on a direct hit).
+   (`TacoBossRangedAttackGoal` + `TacoProjectileEntity`) — above half health they just deal 4
+   direct damage; at or below half health they instead **explode on any impact** (ground or
+   player), a small ghast-fireball-style blast with fire disabled (`World.ExplosionSourceType.MOB`,
+   power 1.0, same as a ghast fireball).
 4. If the target dies, logs off, or gets more than 64 blocks away for 15+ seconds, the boss gives
    up and returns to Stalking (see `TacoBossEntity#tick()`), which also stops the music.
 
@@ -167,6 +193,46 @@ two recordings with `ffmpeg`, trimming applied to the warning one). Still needed
   the matching files.
 
 If your clips aren't already `.ogg`, convert with ffmpeg, e.g. `ffmpeg -i clip.mp3 clip.ogg`.
+
+**Bug fixed: tacos hanging near the boss.** They were spawning dead-center inside its own
+(large) hitbox, which could let them re-collide with their own owner instead of flying out
+cleanly — most noticeable shooting from directly above. Fixed in `TacoBossRangedAttackGoal` by
+spawning them offset outward, toward the target, clear of the boss's bounding box.
+
+## The Summoning Ritual
+
+How you actually get a Taco Boss the "real" way (`lukes_special_egg` still works too, for quick
+testing):
+
+1. Get three `MariachiEntity`s standing within 8 blocks of each other.
+2. Right-click one with a `vihuela`, one with a `trumpet`, and one with a `violin` (each needs
+   an empty hand — see `MariachiEntity#interactMob`).
+3. The moment all three instruments are present in one cluster, the ritual song
+   (`ritual_song.ogg`) starts playing and a timer begins (`MariachiRitual`, checked once a
+   second). If any of the three wander apart, die, or lose their instrument before the song
+   finishes, the ritual just quietly fizzles — no partial-progress penalty, you can immediately
+   try again.
+4. Once the full song has played through, the boss spawns ~50 blocks from whichever player is
+   closest to the ritual, standing on the surface (a heightmap lookup with a few retries for
+   clear headroom, so it doesn't spawn stuck in terrain or fall from the sky). From there its
+   normal Stalking behavior takes over — it already always knows the nearest player and holds
+   an 18-22 block standoff, so it closes the gap and starts stalking on its own.
+
+**Recipes** (`data/glukelonzales/recipe/`) — shapes chosen to loosely mirror each instrument
+where a 3x3 grid allows it:
+
+```
+Vihuela (1 wood, 1 stick, 3 string, 2 iron nuggets)   Violin (1 wood, 1 stick, 2 string, 2 iron nuggets)
+ . S .                                                  N . N
+ N K N                                                  . K .
+ S W S                                                  S W S
+
+Trumpet (3 gold ingots, diagonal tube + bell)
+ . . G
+ . G .
+ G . .
+```
+(`S`=string, `N`=iron nugget, `K`=stick, `W`=any planks, `G`=gold ingot)
 
 **Tuning knobs** — all the numbers above (detection range, stare-FOV, stare duration, speeds,
 attack rate/damage, projectile damage/cooldown, give-up thresholds) are named constants at the

@@ -9,6 +9,9 @@
 	"item.glukelonzales.lukes_special_egg": "Luke's Special Egg",
 	"item.glukelonzales.sombrero": "Sombrero de Luke",
 	"item.glukelonzales.taco": "Taco",
+	"item.glukelonzales.vihuela": "Vihuela",
+	"item.glukelonzales.trumpet": "Trumpet",
+	"item.glukelonzales.violin": "Violin",
 
 	"effect.glukelonzales.mexican_spirit": "The Mexican Spirit",
 
@@ -16,6 +19,7 @@
 	"subtitles.glukelonzales.taco_boss_taunt": "Taco Boss shouts",
 	"subtitles.glukelonzales.taco_throw": "Taco launched",
 	"subtitles.glukelonzales.mexican_spirit_jingle": "The Mexican Spirit stirs",
+	"subtitles.glukelonzales.ritual_song": "The mariachis play",
 
 	"_comment_items": "item.glukelonzales.<item_id>",
 

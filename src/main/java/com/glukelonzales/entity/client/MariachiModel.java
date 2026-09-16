@@ -86,18 +86,27 @@ public class MariachiModel<T extends LivingEntity> extends BipedEntityModel<T> {
 
 		// Legs keep their vanilla pivot height (12) plus the offset, so they hang from the
 		// lowered body; being LEG_HEIGHT tall they end at 12 + 4 + 8 = 24, the ground line.
+		// That means the TOP of the leg (nearest the hip) is what got cut, not the bottom — so
+		// the UV sample also needs to start LEG_SHORTENING rows further down than vanilla's,
+		// to read the bottom 8 rows of the texture's 12-row leg band (where feet/shoes are)
+		// instead of the top 8 (thigh). Sampling from vanilla's own V origin here was the bug:
+		// it skipped the feet entirely, leaving them untextured.
 		ModelPartData rightLeg = root.addChild("right_leg",
-				ModelPartBuilder.create().uv(0, 16).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, Dilation.NONE),
+				ModelPartBuilder.create().uv(0, 16 + (int) LEG_SHORTENING)
+						.cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, Dilation.NONE),
 				ModelTransform.pivot(-1.9f, VANILLA_LEG_HEIGHT + dy, 0.0f));
 		rightLeg.addChild("right_pants",
-				ModelPartBuilder.create().uv(0, 32).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, OVERLAY),
+				ModelPartBuilder.create().uv(0, 32 + (int) LEG_SHORTENING)
+						.cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, OVERLAY),
 				ModelTransform.NONE);
 
 		ModelPartData leftLeg = root.addChild("left_leg",
-				ModelPartBuilder.create().uv(16, 48).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, Dilation.NONE),
+				ModelPartBuilder.create().uv(16, 48 + (int) LEG_SHORTENING)
+						.cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, Dilation.NONE),
 				ModelTransform.pivot(1.9f, VANILLA_LEG_HEIGHT + dy, 0.0f));
 		leftLeg.addChild("left_pants",
-				ModelPartBuilder.create().uv(0, 48).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, OVERLAY),
+				ModelPartBuilder.create().uv(0, 48 + (int) LEG_SHORTENING)
+						.cuboid(-2.0f, 0.0f, -2.0f, 4.0f, LEG_HEIGHT, 4.0f, OVERLAY),
 				ModelTransform.NONE);
 
 		return TexturedModelData.of(modelData, 64, 64);

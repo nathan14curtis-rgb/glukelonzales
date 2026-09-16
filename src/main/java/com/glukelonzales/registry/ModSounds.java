@@ -33,9 +33,13 @@ public class ModSounds {
 	public static final List<SoundEvent> TACO_BOSS_TAUNTS = List.of(
 			TACO_BOSS_TAUNT_1, TACO_BOSS_TAUNT_2, TACO_BOSS_TAUNT_3, TACO_BOSS_TAUNT_4, TACO_BOSS_TAUNT_5);
 
-	/** Plays once, for the full 10-second duration of The Mexican Spirit effect (seconds 3-13
-	 *  of the normal chase track). */
+	/** Plays once, for the first 8.7 seconds of The Mexican Spirit / Strength effects (30s
+	 *  total) granted by eating a taco. */
 	public static final SoundEvent MEXICAN_SPIRIT_JINGLE = register("mexican_spirit_jingle");
+
+	/** The summoning ritual's song — plays once, in full, while three mariachis (one each with
+	 *  a vihuela, trumpet, and violin) perform together. See MariachiRitual. */
+	public static final SoundEvent RITUAL_SONG = register("ritual_song");
 
 	public static SoundEvent register(String name) {
 		Identifier id = Glukelonzales.id(name);

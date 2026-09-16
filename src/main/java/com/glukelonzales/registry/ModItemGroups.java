@@ -18,6 +18,9 @@ public class ModItemGroups {
 					.entries((displayContext, entries) -> {
 						entries.add(ModItems.SOMBRERO);
 						entries.add(ModItems.TACO);
+						entries.add(ModItems.VIHUELA);
+						entries.add(ModItems.TRUMPET);
+						entries.add(ModItems.VIOLIN);
 						entries.add(ModItems.MARIACHI_SPAWN_EGG);
 						entries.add(ModItems.LUKES_SPECIAL_EGG);
 					})

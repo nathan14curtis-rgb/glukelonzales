@@ -36,5 +36,11 @@
 		"sounds": [
 			{ "name": "glukelonzales:mexican_spirit_jingle", "stream": true }
 		]
+	},
+	"ritual_song": {
+		"subtitle": "subtitles.glukelonzales.ritual_song",
+		"sounds": [
+			{ "name": "glukelonzales:ritual_song", "stream": true }
+		]
 	}
 }

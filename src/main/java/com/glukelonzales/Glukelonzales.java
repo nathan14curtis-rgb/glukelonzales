@@ -1,5 +1,7 @@
 package com.glukelonzales;
 
+import com.glukelonzales.entity.custom.MariachiRitual;
+import com.glukelonzales.entity.custom.MariachiSpawner;
 import com.glukelonzales.item.custom.SombreroTacoAbility;
 import com.glukelonzales.registry.ModEffects;
 import com.glukelonzales.registry.ModEntities;
@@ -31,6 +33,8 @@ public class Glukelonzales implements ModInitializer {
 		ModItems.register();
 		ModItemGroups.register();
 		SombreroTacoAbility.register();
+		MariachiSpawner.register();
+		MariachiRitual.register();
 
 		LOGGER.info("[{}] mariachi music starts playing", MOD_ID);
 	}

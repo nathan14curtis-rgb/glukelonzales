@@ -3,6 +3,7 @@ package com.glukelonzales.registry;
 import com.glukelonzales.Glukelonzales;
 import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.Item;
@@ -23,12 +24,15 @@ public class ModItems {
 			ArmorMaterials.DIAMOND, ArmorItem.Type.HELMET,
 			new Item.Settings().maxDamage(ArmorItem.Type.HELMET.getMaxDamage(33)).maxCount(1)));
 
-	/** 4 hunger bars (8 points), and applies The Mexican Spirit for 10 seconds. */
+	/** 4 hunger bars (8 points). Grants The Mexican Spirit (2x regen) and Strength V, both for
+	 *  30 seconds — the jingle that plays on eating is only 8.7 seconds long, so it finishes
+	 *  well before either effect wears off. */
 	public static final Item TACO = register("taco", new Item(new Item.Settings().food(
 			new FoodComponent.Builder()
 					.nutrition(8)
 					.saturationModifier(0.6f)
-					.statusEffect(new StatusEffectInstance(ModEffects.MEXICAN_SPIRIT, 200, 0), 1.0f)
+					.statusEffect(new StatusEffectInstance(ModEffects.MEXICAN_SPIRIT, 600, 0), 1.0f)
+					.statusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 600, 4), 1.0f)
 					.build())));
 
 	/** Spawn egg colours are taken from the skin: black charro suit, marigold trim. */
@@ -39,6 +43,12 @@ public class ModItems {
 	 *  makes it easy to spot in the creative inventory/search. */
 	public static final Item LUKES_SPECIAL_EGG = register("lukes_special_egg",
 			new SpawnEggItem(ModEntities.TACO_BOSS, 0xF7C6D9, 0xB5E8D5, new Item.Settings()));
+
+	/** The three summoning-ritual instruments — give one to each of three mariachis standing
+	 *  together to start {@code MariachiRitual}. */
+	public static final Item VIHUELA = register("vihuela", new Item(new Item.Settings().maxCount(1)));
+	public static final Item TRUMPET = register("trumpet", new Item(new Item.Settings().maxCount(1)));
+	public static final Item VIOLIN = register("violin", new Item(new Item.Settings().maxCount(1)));
 
 	public static Item register(String name, Item item) {
 		return Registry.register(Registries.ITEM, Glukelonzales.id(name), item);
