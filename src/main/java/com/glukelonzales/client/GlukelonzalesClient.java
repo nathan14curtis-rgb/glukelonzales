@@ -74,10 +74,10 @@ public class GlukelonzalesClient implements ClientModInitializer {
 	}
 
 	/** Normal-track playback volume; the warning track is played back {@link #WARNING_VOLUME}
-	 *  instead (quieter, per spec, since the source recording itself runs louder). Both halved
-	 *  again from their original values per a later "turn all the songs down" request. */
-	private static final float NORMAL_VOLUME = 0.5F;
-	private static final float WARNING_VOLUME = 0.375F; // 25% quieter than normal, same ratio as before
+	 *  instead (quieter, per spec, since the source recording itself runs louder). Cut twice now
+	 *  (1.0 -> 0.5 -> 0.2) per repeated "turn all the songs down further" requests. */
+	private static final float NORMAL_VOLUME = 0.2F;
+	private static final float WARNING_VOLUME = 0.15F; // 25% quieter than normal, same ratio as before
 
 	/** Starts/stops/swaps the looping chase track for every taco boss in render distance, based
 	 *  on its synced phase (playing at all) and current health (which of the two tracks). See
@@ -139,9 +139,14 @@ public class GlukelonzalesClient implements ClientModInitializer {
 				continue;
 			}
 			if (TRIGGERED_RITUAL_MARKERS.add(stand.getId())) {
-				// Was 4.0 before the "turn all the songs down 50%" request.
+				// Was 4.0, then 2.0, before repeated "turn all the songs down further" requests.
+				// repeat=false and AttenuationType.LINEAR are both guaranteed by this exact
+				// constructor overload (verified against the mapped 1.21.1 sources), so this one
+				// genuinely only plays once and does fall off with distance like everything else
+				// here — the endless/overlapping playback was the ritual restart-loop bug in
+				// MariachiRitual, not this sound instance.
 				var sound = new PositionedSoundInstance(ModSounds.RITUAL_SONG, SoundCategory.RECORDS,
-						2.0F, 1.0F, stand.getRandom(), stand.getX(), stand.getY(), stand.getZ());
+						0.6F, 1.0F, stand.getRandom(), stand.getX(), stand.getY(), stand.getZ());
 				client.getSoundManager().play(sound);
 			}
 		}

@@ -35,16 +35,20 @@ with the stock `PlayerEntityModel`/`EntityModelLayers.PLAYER`, not a custom mode
   hold it — that's how the Taco Boss gets summoned, see below.
 
 **Bug history: the feet.** An earlier pass gave the Mariachi (and the Taco Boss, which shares
-its skin) 4-model-pixel-shorter legs via a custom `MariachiModel`, matching a description of the
-skin's proportions. This repeatedly rendered with the feet missing/translucent — first suspected
-to be a UV-region mismatch and patched by shifting the sampled texture rows, which didn't fully
-fix it either. Rather than keep chasing the exact cause blind (no way to render/preview a model
-change without the reporter actually launching the game), both entities were switched to
-**standard, unmodified player proportions and the stock `PlayerEntityModel`** — the custom model
-class was deleted entirely. This guarantees correct rendering since it's vanilla's own
-well-tested model applied to a same-format 64x64 skin, at the cost of the Mariachi no longer
-being visibly shorter-legged than a player. The Taco Boss is still bigger overall, purely via
-its independent 2.1x render-time scale (see below), which was never related to the leg issue.
+its skin) 4-model-pixel-shorter legs via a custom `MariachiModel`, then reverted that to the
+stock `PlayerEntityModel` when the feet still weren't rendering right. Both were red herrings —
+model geometry and UV mapping were fine the whole time. A screenshot finally made the real cause
+obvious: it wasn't a UV/model bug at all, it was the **skin file itself**. Pixel-sampling
+`mariachi.png`'s leg regions directly showed the actual problem — the base leg textures were
+genuinely ~1/3 fully-transparent pixels (holes an artist just never painted over), and the
+pants-overlay layer was ~90% transparent with a handful of stray opaque pixels scattered in it
+(showing up as tiny floating specks). No amount of correct UV math or model geometry could have
+fixed a texture with real transparent gaps in it. Fixed by editing the texture directly: the
+leftover holes in both base leg regions were filled in (a simple nearest-opaque-neighbor
+in-paint, so the fill extends whatever art was already there rather than a flat patch), and the
+sparse pants-overlay layer was cleared to fully transparent so there's nothing left to float.
+The Taco Boss shares the same fixed file. Model-wise it's still the plain `PlayerEntityModel`
+from the previous (ultimately unnecessary, but harmless) revert.
 
 ## Items
 
@@ -169,17 +173,21 @@ Ender Dragon/Wither) that tracks its health from the moment a player is in rende
 chase track plays is driven by that same health, not by phase:
 
 - **Above half health** — `taco_boss_mariachi.ogg` (the "Normal" recording), full length, looping,
-  at 50% volume.
+  at 20% volume.
 - **At or below half health** — `taco_boss_mariachi_warning.ogg` (the "WARNING LOUD" recording,
-  trimmed to drop its first 3 seconds so the loop point is clean), looping, at 37.5% volume (still
-  25% quieter than the normal track's new baseline, per the original spec — the source recording
+  trimmed to drop its first 3 seconds so the loop point is clean), looping, at 15% volume (still
+  25% quieter than the normal track's baseline, per the original spec — the source recording
   itself runs hot).
 
-(Both were halved again from their original volumes after a "the songs are too loud, and all of
-them need to fall off with distance" report — they were already positioned, distance-attenuated
-sounds the whole time, so the fix here is really just the volume cut; the perceived "doesn't get
-quieter" was almost certainly the ritual song's overlap bug below making everything sound
-constant and everywhere, not an actual attenuation bug.)
+(Cut twice now — 100% -> 50% -> 20% of the original — after repeated "still too loud" / "still
+not falling off with distance" reports. On the attenuation question specifically: verified
+directly against the mapped 1.21.1 sources that `AbstractSoundInstance` (and therefore
+`MovingSoundInstance`, which this uses) defaults to `AttenuationType.LINEAR`, i.e. these already
+do fall off with distance and always have. The perceived "doesn't get quieter no matter where I
+go" was near-certainly the ritual song's actual restart-loop bug below — a fresh, loud,
+non-attenuating-*feeling* instance kept starting up somewhere every second, which would mask any
+falloff on everything else too. Worth re-checking specifically whether *this* still feels wrong
+once that's fixed, since the code says it shouldn't be.)
 
 If health crosses the halfway line mid-loop, `GlukelonzalesClient` stops the current track and
 starts the other one immediately rather than waiting for the loop to finish.
@@ -221,15 +229,27 @@ testing):
    normal Stalking behavior takes over — it already always knows the nearest player and holds
    an 18-22 block standoff, so it closes the gap and starts stalking on its own.
 
-**Bug fixed: the song played 2-3 times at once, staggered.** It was triggered with a direct
-`world.playSound` broadcast every time the ritual (re-)detected a valid trio, and — since a
-`world.playSound` call can't be cancelled once sent — any spurious re-detection (e.g. the
-clustering jitter above, before that was fixed) started a brand new, independent, ~2.5-minute
-playback on top of whatever was already playing. Fixed by tying the song to a single invisible,
-invulnerable marker entity (a silent `ArmorStandEntity`) spawned exactly once per ritual: the
-client plays a one-shot, non-looping, distance-attenuated sound anchored to that one entity
-(`GlukelonzalesClient#updateRitualSound`) instead of a raw broadcast, so no matter how the
-server-side bookkeeping gets re-evaluated, the audible song can only ever be playing once.
+**Bug fixed (for real this time): the song overlapped endlessly and the boss never spawned.**
+The previous write-up here blamed a `world.playSound` broadcast getting re-triggered and
+switched to a marker-entity sound instead — that part was a legitimate improvement, but it
+didn't fix the actual bug, because the actual bug was somewhere else entirely.
+`ServerTickEvents.END_WORLD_TICK` fires once per **loaded dimension** per server tick — overworld,
+nether, and end are all normally loaded at once, each getting its own independent call. The
+ritual's progress tracking (`active`, a single shared field) had no idea which dimension it
+belonged to, so when the *nether's* tick call ran `progressActive`, it looked up the mariachis'
+UUIDs in the nether, found nothing there (they're in the overworld), and immediately cancelled
+the ritual. Then, on the very next overworld tick a moment later, `active` was null again, so it
+re-detected the same still-standing trio and started a **brand new ritual from zero** — new
+marker, new full song. This repeated roughly every second, for as long as the trio remained
+valid: a constant stream of freshly-started ~2.5-minute songs stacking on top of each other
+forever (matching "keeps going and going"), while the progress counter never got anywhere near
+completing a single one (matching "the boss never spawned" — and why killing mariachis, which
+finally made `hasOneOfEach` fail in every dimension's check including the overworld's own, is
+what stopped it). Fixed by pinning an active ritual to the specific `ServerWorld` it started in
+and having `tick()` ignore calls from any other one entirely — see the class-level Javadoc in
+`MariachiRitual` for the full explanation. Also added a small self-heal: whenever there's no
+active ritual, any stray leftover marker armor stands (orphaned by the bug above, e.g. in a save
+from before this fix) get discarded on sight, so old saves clean themselves up automatically.
 
 **Recipes** (`data/glukelonzales/recipe/`) — shapes chosen to loosely mirror each instrument
 where a 3x3 grid allows it:
@@ -287,6 +307,13 @@ clean too — no exceptions, just one `Can't keep up! ... 60 ticks behind` spike
 lag hiccup, not repeated; most likely a window focus loss or big chunk load rather than anything
 in this mod, since nothing in the following ~20 minutes of active combat/ritual logic repeated
 it).
+
+A third session's log (the one that caught the ritual/feet issues above) was clean too — no new
+exceptions. It did have one `[Sound engine/ERROR] Stop: Invalid name parameter`, but that fired
+at the exact same timestamp as `Player left the game` / `Stopping server`; it's a known, benign
+vanilla OpenAL cleanup race that happens on quit/disconnect (the sound engine tries to stop
+in-flight sounds while its audio context is already tearing down), not anything in this mod's
+code.
 
 ## License
 

@@ -14,7 +14,7 @@ import net.minecraft.sound.SoundCategory;
  */
 public class MexicanSpiritEffect extends StatusEffect {
     private static final int TICKS_PER_HEAL = 25;
-    private static final float JINGLE_VOLUME = 0.5F; // halved per "turn all the songs down" request
+    private static final float JINGLE_VOLUME = 0.2F; // cut twice now (1.0 -> 0.5 -> 0.2)
 
     public MexicanSpiritEffect(StatusEffectCategory category, int color) {
         super(category, color);

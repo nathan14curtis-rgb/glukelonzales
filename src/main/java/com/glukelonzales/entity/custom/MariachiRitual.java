@@ -40,6 +40,17 @@ import java.util.UUID;
  *
  * <p>Keeps things simple by tracking at most one active ritual at a time — if you start a second
  * trio elsewhere while one's already playing, it won't be picked up until the first resolves.
+ *
+ * <p><b>Bug history:</b> {@link ServerTickEvents#END_WORLD_TICK} fires once per *loaded
+ * dimension* per server tick (overworld, nether, end are all usually loaded at once), but
+ * {@link #active} was shared static state with no dimension check. The nether/end's tick call
+ * would look up the mariachis' UUIDs in the wrong world, find nothing, and immediately cancel
+ * the ritual — and on the very next overworld tick, re-detect the same still-valid trio and
+ * restart from zero. That produced a brand new ~2.5-minute song roughly every second,
+ * compounding forever (explaining the overlapping/never-ending audio) while the actual progress
+ * counter never got anywhere near {@link #SONG_DURATION_TICKS} (explaining the boss never
+ * spawning). Fixed by pinning an active ritual to the specific {@link ServerWorld} it started
+ * in and ignoring tick calls from any other one entirely.
  */
 public class MariachiRitual {
     private static final int CHECK_INTERVAL_TICKS = 20; // 1 second
@@ -53,9 +64,9 @@ public class MariachiRitual {
 
     private static Ritual active;
 
-    private record Ritual(Map<UUID, Item> requiredInstruments, UUID markerId, int elapsedTicks) {
+    private record Ritual(ServerWorld world, Map<UUID, Item> requiredInstruments, UUID markerId, int elapsedTicks) {
         Ritual tick() {
-            return new Ritual(requiredInstruments, markerId, elapsedTicks + CHECK_INTERVAL_TICKS);
+            return new Ritual(world, requiredInstruments, markerId, elapsedTicks + CHECK_INTERVAL_TICKS);
         }
     }
 
@@ -73,7 +84,12 @@ public class MariachiRitual {
         }
 
         if (active != null) {
-            progressActive(world);
+            // Ignore tick calls from any other loaded dimension entirely — don't touch `active`
+            // at all, since the mariachis/marker simply don't exist there and a lookup would
+            // wrongly read as "gone".
+            if (active.world() == world) {
+                progressActive(world);
+            }
             return;
         }
 
@@ -112,6 +128,10 @@ public class MariachiRitual {
             if (entity instanceof MariachiEntity mariachi
                     && INSTRUMENTS.contains(mariachi.getMainHandStack().getItem())) {
                 performers.add(mariachi);
+            } else if (entity instanceof ArmorStandEntity stand && isRitualMarker(stand)) {
+                // Self-heal: with no active ritual there should be no marker at all. Clears out
+                // anything orphaned by the dimension bug above on worlds upgrading from it.
+                stand.discard();
             }
         }
         if (performers.size() < 3) {
@@ -159,7 +179,7 @@ public class MariachiRitual {
         marker.setCustomNameVisible(false);
         world.spawnEntity(marker);
 
-        active = new Ritual(requiredInstruments, marker.getUuid(), 0);
+        active = new Ritual(world, requiredInstruments, marker.getUuid(), 0);
     }
 
     private static boolean hasOneOfEach(List<MariachiEntity> cluster) {
