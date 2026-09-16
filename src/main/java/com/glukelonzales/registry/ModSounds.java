@@ -15,8 +15,12 @@ import java.util.List;
 public class ModSounds {
 	// public static final SoundEvent MARIACHI_MUSIC = register("mariachi_music");
 
-	/** Looping chase track — see sounds.json and drop the real file in assets/.../sounds/. */
+	/** Looping chase track while the boss is above half health. */
 	public static final SoundEvent TACO_BOSS_MARIACHI = register("taco_boss_mariachi");
+
+	/** Looping chase track once the boss drops to half health or below — louder recording,
+	 *  played back quieter (see TacoBossMariachiSound) than the normal track. */
+	public static final SoundEvent TACO_BOSS_MARIACHI_WARNING = register("taco_boss_mariachi_warning");
 
 	/** The funny voice clips, picked at random once the boss starts attacking. Add/remove
 	 *  entries from both this list and sounds.json to change how many there are. */

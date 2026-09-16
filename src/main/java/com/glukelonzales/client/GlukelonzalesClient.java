@@ -5,6 +5,7 @@ import com.glukelonzales.entity.client.MariachiModel;
 import com.glukelonzales.entity.client.MariachiRenderer;
 import com.glukelonzales.entity.custom.TacoBossEntity;
 import com.glukelonzales.registry.ModEntities;
+import com.glukelonzales.registry.ModSounds;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
@@ -15,6 +16,7 @@ import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
@@ -60,8 +62,15 @@ public class GlukelonzalesClient implements ClientModInitializer {
 		Glukelonzales.LOGGER.debug("Client init for {}", Glukelonzales.MOD_ID);
 	}
 
-	/** Starts/stops the looping chase track for every taco boss in render distance based on its
-	 *  synced phase. See {@link TacoBossMariachiSound} for why the sound itself needs no volume math. */
+	/** Normal-track playback volume; the warning track is played back {@link #WARNING_VOLUME}
+	 *  instead (quieter, per spec, since the source recording itself runs louder). */
+	private static final float NORMAL_VOLUME = 1.0F;
+	private static final float WARNING_VOLUME = 0.75F; // 25% quieter than normal
+
+	/** Starts/stops/swaps the looping chase track for every taco boss in render distance, based
+	 *  on its synced phase (playing at all) and current health (which of the two tracks). See
+	 *  {@link TacoBossMariachiSound} for why the sound itself needs no distance/volume math
+	 *  beyond that 25% offset. */
 	private static void updateMariachiSounds(MinecraftClient client) {
 		if (client.world == null) {
 			ACTIVE_MARIACHI.clear();
@@ -72,15 +81,30 @@ public class GlukelonzalesClient implements ClientModInitializer {
 			if (!(entity instanceof TacoBossEntity boss)) {
 				continue;
 			}
-			boolean shouldPlay = boss.isAlive() && boss.getPhase() == TacoBossEntity.Phase.CHASING;
+			boolean shouldPlay = boss.isAlive() && boss.getPhase() != TacoBossEntity.Phase.STALKING;
 			TacoBossMariachiSound existing = ACTIVE_MARIACHI.get(boss.getId());
 
-			if (shouldPlay && existing == null) {
-				TacoBossMariachiSound sound = new TacoBossMariachiSound(boss);
+			if (!shouldPlay) {
+				if (existing != null) {
+					ACTIVE_MARIACHI.remove(boss.getId());
+				}
+				continue;
+			}
+
+			boolean warning = boss.isBelowHalfHealth();
+			SoundEvent desiredTrack = warning ? ModSounds.TACO_BOSS_MARIACHI_WARNING : ModSounds.TACO_BOSS_MARIACHI;
+
+			if (existing != null && existing.getTrackId() != desiredTrack) {
+				// Health crossed the halfway line mid-loop — cut the old track and swap in the other.
+				client.getSoundManager().stop(existing);
+				existing = null;
+			}
+
+			if (existing == null) {
+				float volume = warning ? WARNING_VOLUME : NORMAL_VOLUME;
+				TacoBossMariachiSound sound = new TacoBossMariachiSound(boss, desiredTrack, volume);
 				ACTIVE_MARIACHI.put(boss.getId(), sound);
 				client.getSoundManager().play(sound);
-			} else if (!shouldPlay && existing != null) {
-				ACTIVE_MARIACHI.remove(boss.getId());
 			}
 		}
 

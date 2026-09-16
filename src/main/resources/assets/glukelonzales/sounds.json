@@ -5,6 +5,12 @@
 			{ "name": "glukelonzales:taco_boss_mariachi", "stream": true }
 		]
 	},
+	"taco_boss_mariachi_warning": {
+		"subtitle": "subtitles.glukelonzales.taco_boss_mariachi",
+		"sounds": [
+			{ "name": "glukelonzales:taco_boss_mariachi_warning", "stream": true }
+		]
+	},
 	"taco_boss_taunt_1": {
 		"subtitle": "subtitles.glukelonzales.taco_boss_taunt",
 		"sounds": [ "glukelonzales:taco_boss_taunt_1" ]

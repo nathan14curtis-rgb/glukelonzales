@@ -134,22 +134,34 @@ ground to spawn), or summon it directly for testing:
    **2 continuous seconds** snaps it into Chasing, targeting that player. Looking away decays the
    timer gradually rather than resetting it.
 2. **Chasing** — sprints straight at its target at nearly double its stalking speed
-   (`TacoBossChargeGoal`). A looping mariachi track starts, anchored to the boss's live position
+   (`TacoBossChargeGoal`). A looping chase track starts the moment it's engaged (Chasing or
+   Attacking — see below) and keeps playing across both, anchored to the boss's live position
    client-side (`TacoBossMariachiSound`) — Minecraft's normal distance falloff is what makes it
    swell as the boss closes in, no extra volume code needed. Reaching melee range flips it to
    Attacking.
 3. **Attacking** — rapid melee: half a heart (1 damage) roughly every 8 ticks, i.e. ~2.5
-   hits/second (`TacoBossRapidMeleeGoal`). The mariachi track cuts out and a random taunt clip
-   plays every few seconds instead. Taco projectiles keep firing throughout Chasing/Attacking
-   every 10 ticks (`TacoBossRangedAttackGoal` + `TacoProjectileEntity`, 4 damage on a direct
-   hit).
+   hits/second (`TacoBossRapidMeleeGoal`). A random taunt clip plays every few seconds on top of
+   the chase music. Taco projectiles keep firing throughout Chasing/Attacking every 10 ticks
+   (`TacoBossRangedAttackGoal` + `TacoProjectileEntity`, 4 damage on a direct hit).
 4. If the target dies, logs off, or gets more than 64 blocks away for 15+ seconds, the boss gives
-   up and returns to Stalking (see `TacoBossEntity#tick()`).
+   up and returns to Stalking (see `TacoBossEntity#tick()`), which also stops the music.
 
-**Audio you need to supply** — drop these `.ogg` files in `assets/glukelonzales/sounds/`
-(already wired up in `sounds.json` and `ModSounds`):
+**Health, the boss bar, and the two chase tracks** — the boss has 500 hearts (1000 HP) and shows
+a red "Luke Gonzalez" boss bar at the top of the screen (`ServerBossBar`, same mechanism as the
+Ender Dragon/Wither) that tracks its health from the moment a player is in render distance. Which
+chase track plays is driven by that same health, not by phase:
 
-- `taco_boss_mariachi.ogg` — the chase music (loops; keep it seamless-loopable).
+- **Above half health** — `taco_boss_mariachi.ogg` (the "Normal" recording), full length, looping.
+- **At or below half health** — `taco_boss_mariachi_warning.ogg` (the "WARNING LOUD" recording,
+  trimmed to drop its first 3 seconds so the loop point is clean), looping, played back at 75%
+  volume (25% quieter than the normal track, per spec — the source recording itself runs hot).
+
+If health crosses the halfway line mid-loop, `GlukelonzalesClient` stops the current track and
+starts the other one immediately rather than waiting for the loop to finish.
+
+**Audio** — both chase tracks are already in `assets/glukelonzales/sounds/` (converted from the
+two recordings with `ffmpeg`, trimming applied to the warning one). Still needed:
+
 - `taco_boss_taunt_1.ogg` through `taco_boss_taunt_5.ogg` — your friend's funny clips. Want more
   or fewer than 5? Add/remove entries in `ModSounds.TACO_BOSS_TAUNTS`, `sounds.json`, and drop
   the matching files.

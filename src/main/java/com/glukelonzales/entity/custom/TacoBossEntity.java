@@ -7,12 +7,17 @@ import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
@@ -68,6 +73,9 @@ public class TacoBossEntity extends HostileEntity {
     private final Map<UUID, Integer> stareTicks = new HashMap<>();
     private int giveUpCounter;
 
+    private final ServerBossBar bossBar = new ServerBossBar(
+            Text.literal("Luke Gonzalez"), BossBar.Color.RED, BossBar.Style.PROGRESS);
+
     public TacoBossEntity(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
         this.experiencePoints = 50;
@@ -75,12 +83,30 @@ public class TacoBossEntity extends HostileEntity {
 
     public static DefaultAttributeContainer.Builder createTacoBossAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 200.0)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 1000.0) // 500 hearts
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, STALK_SPEED)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 1.0)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, DETECTION_RANGE)
                 .add(EntityAttributes.GENERIC_ARMOR, 4.0)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0);
+    }
+
+    /** Used both server-side (bossbar color cue, if wanted later) and client-side (picking
+     *  which chase track to play — see GlukelonzalesClient) to know which health phase this is. */
+    public boolean isBelowHalfHealth() {
+        return this.getHealth() <= this.getMaxHealth() / 2.0F;
+    }
+
+    @Override
+    public void onStartedTrackingBy(ServerPlayerEntity player) {
+        super.onStartedTrackingBy(player);
+        this.bossBar.addPlayer(player);
+    }
+
+    @Override
+    public void onStoppedTrackingBy(ServerPlayerEntity player) {
+        super.onStoppedTrackingBy(player);
+        this.bossBar.removePlayer(player);
     }
 
     @Override
@@ -132,6 +158,8 @@ public class TacoBossEntity extends HostileEntity {
         if (this.getWorld().isClient) {
             return;
         }
+
+        this.bossBar.setPercent(MathHelper.clamp(this.getHealth() / this.getMaxHealth(), 0.0F, 1.0F));
 
         LivingEntity target = this.getTarget();
         Phase phase = this.getPhase();
