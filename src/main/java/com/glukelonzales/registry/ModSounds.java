@@ -33,6 +33,10 @@ public class ModSounds {
 	public static final List<SoundEvent> TACO_BOSS_TAUNTS = List.of(
 			TACO_BOSS_TAUNT_1, TACO_BOSS_TAUNT_2, TACO_BOSS_TAUNT_3, TACO_BOSS_TAUNT_4, TACO_BOSS_TAUNT_5);
 
+	/** Plays once, for the full 10-second duration of The Mexican Spirit effect (seconds 3-13
+	 *  of the normal chase track). */
+	public static final SoundEvent MEXICAN_SPIRIT_JINGLE = register("mexican_spirit_jingle");
+
 	public static SoundEvent register(String name) {
 		Identifier id = Glukelonzales.id(name);
 		return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));

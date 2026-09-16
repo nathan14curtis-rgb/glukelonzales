@@ -53,8 +53,18 @@ public class TacoBossRangedAttackGoal extends Goal {
         }
         cooldown = COOLDOWN_TICKS;
 
+        // Spawn clear of the boss's own (large) hitbox, offset horizontally toward the target,
+        // rather than dead-center in its body — spawning inside a hitbox this big was letting
+        // some tacos re-collide with their own owner instead of flying out cleanly.
+        double towardX = target.getX() - boss.getX();
+        double towardZ = target.getZ() - boss.getZ();
+        double horizontalDist = Math.sqrt(towardX * towardX + towardZ * towardZ);
+        double clearance = boss.getBoundingBox().getLengthX() / 2.0 + 0.75;
+        double dirX = horizontalDist > 1.0E-4 ? towardX / horizontalDist : 1.0;
+        double dirZ = horizontalDist > 1.0E-4 ? towardZ / horizontalDist : 0.0;
+
         TacoProjectileEntity taco = new TacoProjectileEntity(boss.getWorld(), boss);
-        taco.setPosition(boss.getX(), boss.getEyeY() - 0.3, boss.getZ());
+        taco.setPosition(boss.getX() + dirX * clearance, boss.getEyeY() - 0.3, boss.getZ() + dirZ * clearance);
 
         double dx = target.getX() - taco.getX();
         double dy = (target.getEyeY() - 0.25) - taco.getY();

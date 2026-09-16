@@ -30,5 +30,11 @@
 	"taco_boss_taunt_5": {
 		"subtitle": "subtitles.glukelonzales.taco_boss_taunt",
 		"sounds": [ "glukelonzales:taco_boss_taunt_5" ]
+	},
+	"mexican_spirit_jingle": {
+		"subtitle": "subtitles.glukelonzales.mexican_spirit_jingle",
+		"sounds": [
+			{ "name": "glukelonzales:mexican_spirit_jingle", "stream": true }
+		]
 	}
 }

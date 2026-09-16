@@ -3,18 +3,20 @@ package com.glukelonzales.client;
 import com.glukelonzales.Glukelonzales;
 import com.glukelonzales.entity.client.MariachiModel;
 import com.glukelonzales.entity.client.MariachiRenderer;
+import com.glukelonzales.entity.client.SombreroArmorRenderer;
+import com.glukelonzales.entity.client.SombreroModel;
 import com.glukelonzales.entity.custom.TacoBossEntity;
 import com.glukelonzales.registry.ModEntities;
+import com.glukelonzales.registry.ModItems;
 import com.glukelonzales.registry.ModSounds;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.render.entity.MobEntityRenderer;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
@@ -26,10 +28,10 @@ import java.util.Map;
  * Client-only entrypoint: entity renderers, model layers, particles, HUD.
  * Never referenced from common code — the server does not have these classes.
  *
- * NOTE on the renderers below: the Mariachi has a real model and skin. The taco boss is still a
- * placeholder that exists only so the client doesn't crash when it spawns — it reuses the vanilla
- * player model scaled up. Swap it out for real art whenever it's ready; none of the AI/damage/sound
- * logic depends on it.
+ * NOTE on the renderers below: the taco boss reuses MariachiModel (same skin, same shortened-leg
+ * proportions the texture was actually drawn for) scaled up 2.1x — it's meant to be a giant
+ * version of the same character. Swap in dedicated art/model whenever it exists; none of the
+ * AI/damage/sound logic depends on it.
  */
 public class GlukelonzalesClient implements ClientModInitializer {
 	private static final Map<Integer, TacoBossMariachiSound> ACTIVE_MARIACHI = new HashMap<>();
@@ -39,12 +41,13 @@ public class GlukelonzalesClient implements ClientModInitializer {
 		EntityModelLayerRegistry.registerModelLayer(MariachiModel.LAYER, MariachiModel::getTexturedModelData);
 		EntityRendererRegistry.register(ModEntities.MARIACHI, MariachiRenderer::new);
 
+		EntityModelLayerRegistry.registerModelLayer(SombreroModel.LAYER, SombreroModel::getTexturedModelData);
+		ArmorRenderer.register(new SombreroArmorRenderer(), ModItems.SOMBRERO);
+
 		EntityRendererRegistry.register(ModEntities.TACO_BOSS, context ->
-				new MobEntityRenderer<>(context, new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER), false), 1.6f) {
+				new MobEntityRenderer<>(context, new MariachiModel<>(context.getPart(MariachiModel.LAYER)), 1.6f) {
 					@Override
 					public Identifier getTexture(TacoBossEntity entity) {
-						// Placeholder: no real skin yet, so this resolves to Minecraft's
-						// missing-texture checkerboard. Swap in a real texture identifier here.
 						return Identifier.of("glukelonzales", "textures/entity/taco_boss.png");
 					}
 

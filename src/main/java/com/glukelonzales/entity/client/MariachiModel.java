@@ -1,7 +1,6 @@
 package com.glukelonzales.entity.client;
 
 import com.glukelonzales.Glukelonzales;
-import com.glukelonzales.entity.custom.MariachiEntity;
 import net.minecraft.client.model.Dilation;
 import net.minecraft.client.model.ModelData;
 import net.minecraft.client.model.ModelPart;
@@ -11,6 +10,7 @@ import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
+import net.minecraft.entity.LivingEntity;
 
 /**
  * A player-shaped model built against a standard 64x64 skin, with one difference:
@@ -21,8 +21,15 @@ import net.minecraft.client.render.entity.model.EntityModelLayer;
  * Shortening the legs alone would leave the feet floating, so everything above the
  * legs is pushed down by the same amount ({@link #VERTICAL_OFFSET}) and the feet stay
  * planted at y=24. The model therefore stands 28 px (1.75 blocks) tall instead of 32.
+ *
+ * <p>Generic on {@code LivingEntity} rather than {@code MariachiEntity} specifically so the
+ * Taco Boss (a giant version of the same character, same skin) can reuse it too — it must,
+ * since the skin was authored for these exact shortened-leg UV coordinates. Rendering it with
+ * a stock {@link net.minecraft.client.render.entity.model.PlayerEntityModel} (standard 12px
+ * legs) stretches the leg cube 4px past what was actually drawn there, sampling into the
+ * pants-overlay texture region below it — which is why the boss's lower legs looked translucent.
  */
-public class MariachiModel<T extends MariachiEntity> extends BipedEntityModel<T> {
+public class MariachiModel<T extends LivingEntity> extends BipedEntityModel<T> {
 	public static final EntityModelLayer LAYER =
 			new EntityModelLayer(Glukelonzales.id("mariachi"), "main");
 
